@@ -152,6 +152,76 @@ void drawAgent();
 void drawCoins();
 void drawScoreBoard();
 
+vector<Car> getCarsFromGivenLineNumber(int lineNumber) {
+	vector<Car> carsInGivenLine;
+	for (int i = 0; i < carVector.size(); i++) {
+		if (carVector[i].lineNumber == lineNumber) {
+			carsInGivenLine.push_back(carVector[i]);
+		}
+	}
+	return carsInGivenLine;
+}
+
+vector<Truck> getTrucksFromGivenLineNumber(int lineNumber) {
+	vector<Truck> trucksInGivenLine;
+	for (int i = 0; i < truckVector.size(); i++) {
+		if (truckVector[i].lineNumber == lineNumber) {
+			trucksInGivenLine.push_back(truckVector[i]);
+		}
+	}
+	return trucksInGivenLine;
+}
+
+vector<Lane> getLanesFromGivenLineNumber(int lineNumber) {
+	vector<Lane> lanesInGivenLine;
+	for (int i = 0; i < lanes.size(); i++) {
+		if (lanes[i].lineNumber == lineNumber) {
+			lanesInGivenLine.push_back(lanes[i]);
+		}
+	}
+	return lanesInGivenLine;
+}
+
+int getHeightOfGivenLineNumber(int lineNumber) {
+	for (int i = 0; i < lanes.size(); i++) {
+		if (lanes[i].lineNumber == lineNumber) {
+			return lanes[i].start.y;
+		}
+	}
+	return -1;
+}
+
+char getDirectionOfLine(int lineNumber) {
+	for (int i = 0; i < lanes.size(); i++) {
+		if (lanes[i].lineNumber == lineNumber) {
+			return lanes[i].direction;
+		}
+	}
+	return 'E'; // indicates error
+}
+
+GLboolean isThereAnyCarOrTruckInThatLine(GLint y, GLint lineNumber) {
+	vector<Car> cars = getCarsFromGivenLineNumber(lineNumber);
+	vector<Truck> trucks = getTrucksFromGivenLineNumber(lineNumber);
+
+	for (int i = 0; i < cars.size(); i++) {
+		if (cars[i].start.y == y) {
+			if (cars[i].start.x < CAR_HALF_SIZE * 4 || cars[i].end.x > width - CAR_HALF_SIZE * 2) {
+				return true;
+			}
+		}
+	}
+
+	for (int i = 0; i < trucks.size(); i++) {
+		if (trucks[i].start.y == y) {
+			if (trucks[i].start.x < TRUCK_HALF_SIZE * 6 || trucks[i].end.x > width - CAR_HALF_SIZE * 4) {
+				return true;
+			}
+		}
+	}
+	return false;
+}
+
 void fillSideWalksVector() {
 	for (GLint i = 0; i < NUMBER_OF_SIDEWALKS; i++) {
 
@@ -372,6 +442,88 @@ void updateVehicleLocation(int id) {
 	glutPostRedisplay();
 }
 
+void turnAgentDown() {
+
+	agent.leftVertex.y = agent.upVertex.y;
+	agent.upVertex.y = agent.rightVertex.y;
+	agent.rightVertex.y = agent.leftVertex.y;
+	agent.direction = 'D';
+	glutPostRedisplay();
+}
+
+void turnAgentUp() {
+
+	agent.leftVertex.y = agent.upVertex.y;
+	agent.upVertex.y = agent.rightVertex.y;
+	agent.rightVertex.y = agent.leftVertex.y;
+	agent.direction = 'U';
+	glutPostRedisplay();
+}
+void agentMoveUp() {
+
+	if (isPaused) {
+		return;
+	}
+	if (agent.direction == 'D') {
+		gameOver();
+	}
+	agent.leftVertex.y = agent.leftVertex.y + GAP_BETWEEN_LANES_VERTICALLY;
+	agent.rightVertex.y = agent.leftVertex.y;
+	agent.upVertex.y = agent.upVertex.y + GAP_BETWEEN_LANES_VERTICALLY;
+
+	if (agent.upVertex.y >= sideWalks[sideWalks.size() - 1].start.y + GAP_BETWEEN_LANES_VERTICALLY) {
+		turnAgentDown();
+		score++;
+	}
+	glutPostRedisplay();
+}
+
+void agentMoveDown() {
+
+	if (isPaused) {
+		return;
+	}
+	if (agent.direction == 'U') {
+		gameOver();
+	}
+	agent.leftVertex.y = agent.leftVertex.y - GAP_BETWEEN_LANES_VERTICALLY;
+	agent.rightVertex.y = agent.leftVertex.y;
+	agent.upVertex.y = agent.upVertex.y - GAP_BETWEEN_LANES_VERTICALLY;
+
+	if (agent.upVertex.y <= sideWalks[0].end.y - GAP_BETWEEN_LANES_VERTICALLY) {
+		turnAgentUp();
+		score++;
+	}
+	glutPostRedisplay();
+}
+void agentMoveLeft() {
+	if (isPaused) {
+		return;
+	}
+	if (agent.leftVertex.x - 5 >= 0) {
+		agent.leftVertex.x = agent.leftVertex.x - 5;
+		agent.rightVertex.x = agent.rightVertex.x - 5;
+		agent.upVertex.x = agent.upVertex.x - 5;
+		glutPostRedisplay();
+	}
+}
+
+void agentMoveRight() {
+	if (isPaused) {
+		return;
+	}
+	if (agent.rightVertex.x + 5 <= width) {
+		agent.leftVertex.x = agent.leftVertex.x + 5;
+		agent.rightVertex.x = agent.rightVertex.x + 5;
+		agent.upVertex.x = agent.upVertex.x + 5;
+		glutPostRedisplay();
+	}
+}
+
+void gameOver() {
+	isGameOver = true;
+	exit(0);
+}
 
 void myReshape(GLsizei w, GLsizei h) {
 
