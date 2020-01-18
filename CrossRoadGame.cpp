@@ -116,6 +116,34 @@ vector<Truck> truckVector;
 vector<Coin> coinVector;
 Agent agent;
 
+/* function prototypes */
+
+void fillSideWalksVector();
+void fillLanesVector();
+vector<Car> getCarsFromGivenLineNumber(int lineNumber);
+vector<Truck> getTrucksFromGivenLineNumber(int lineNumber);
+vector<Lane> getLanesFromGivenLineNumber(int lineNumber);
+int getHeightOfGivenLineNumber(int lineNumber);
+char getDirectionOfLine(int lineNumber);
+GLboolean isThereAnyCarOrTruckInThatLine(GLint y, GLint lineNumber);
+void randomVehicleGenerator(int id);
+void randomCoinGenerator(int id);
+void updateVehicleLocation(int id);
+void agentInit();
+void gameOver();
+void turnAgentDown();
+void turnAgentUp();
+void agentMoveUp();
+void agentMoveDown();
+void agentMoveLeft();
+void agentMoveRight();
+void myReshape(GLsizei w, GLsizei h);
+void myinit(void);
+void myKeyboard(unsigned char key, int x, int y);
+void myKeyboardSpecial(int key, int x, int y);
+void myMouse(int btn, int state, int x, int y);
+void myDisplay(void);
+
 int main()
 {
     std::cout << "Hello World!\n";
