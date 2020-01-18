@@ -144,9 +144,89 @@ void myKeyboard(unsigned char key, int x, int y);
 void myKeyboardSpecial(int key, int x, int y);
 void myMouse(int btn, int state, int x, int y);
 void myDisplay(void);
+void drawSidewalks();
+void drawLanes();
+void drawCars();
+void drawTrucks();
+void drawAgent();
+void drawCoins();
+void drawScoreBoard();
 
-int main(int argc, char** argv)
-{
+void drawScoreBoard() {
+	glColor3ub(125, 125, 125);
+	glRecti(0, gameWindowHeight, width, height);
+}
+
+void drawSidewalks() {
+	for (int i = 0; i < sideWalks.size(); i++) {
+		SideWalk sideWalk = sideWalks[i];
+		glColor3ub(sideWalk.color.r, sideWalk.color.g, sideWalk.color.b);
+		glRecti(sideWalk.start.x, sideWalk.start.y, sideWalk.end.x, sideWalk.end.y);
+	}
+}
+
+void drawLanes() {
+	for (int i = 0; i < lanes.size(); i++) {
+		Lane lane = lanes[i];
+		glColor3ub(lane.color.r, lane.color.g, lane.color.b);
+		glBegin(GL_LINES);
+		glVertex2d(lane.start.x, lane.start.y);
+		glVertex2d(lane.end.x, lane.end.y);
+		glEnd();
+	}
+}
+
+void drawCars() {
+	for (int i = 0; i < carVector.size(); i++) {
+		glColor3ub(carVector[i].color.r, carVector[i].color.g, carVector[i].color.b);
+		glRecti(carVector[i].start.x, carVector[i].start.y, carVector[i].end.x, carVector[i].end.y);
+	}
+}
+
+void drawTrucks() {
+	for (int i = 0; i < truckVector.size(); i++) {
+		glColor3ub(truckVector[i].color.r, truckVector[i].color.g, truckVector[i].color.b);
+		glRecti(truckVector[i].start.x, truckVector[i].start.y, truckVector[i].end.x, truckVector[i].end.y);
+	}
+}
+
+void drawAgent() {
+	glBegin(GL_POLYGON);
+	glColor3ub(agent.color.r, agent.color.g, agent.color.b);
+	glVertex2d(agent.leftVertex.x, agent.leftVertex.y);
+	glVertex2d(agent.rightVertex.x, agent.rightVertex.y);
+	glVertex2d(agent.upVertex.x, agent.upVertex.y);
+	glEnd();
+}
+
+void drawCoins() {
+	for (int i = 0; i < coinVector.size(); i++) {
+		glBegin(GL_POLYGON);
+		for (int j = 0; j < 30; j++)
+		{
+			glColor3ub(coinVector[i].color.r, coinVector[i].color.g, coinVector[i].color.b);
+			float angle = 2 * PI * j / 30;
+			glVertex2f(coinVector[i].center.x + cos(angle) * coinVector[i].radius, coinVector[i].center.y + sin(angle) * coinVector[i].radius);
+		}
+		glEnd();
+	}
+}
+
+void myDisplay(void) {
+	glClear(GL_COLOR_BUFFER_BIT);
+
+	drawScoreBoard();
+	drawSidewalks();
+	drawLanes();
+	drawCars();
+	drawTrucks();
+	drawAgent();
+	drawCoins();
+
+	glFlush();
+}
+
+int main(int argc, char** argv) {
 	glutInit(&argc, argv);
 	glutInitDisplayMode(GLUT_SINGLE | GLUT_RGB);
 	glutInitWindowSize(width, height);
