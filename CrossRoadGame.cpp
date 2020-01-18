@@ -21,7 +21,8 @@ GLboolean isPaused = false;
 GLboolean isGameOver = false;
 
 GLint randomVehicleGeneratorPeriod = 500;
-GLint moveVehiclePeriod = 500;
+GLint updateVehiclePeriod = 500;
+GLint randomCoinGeneratorPeriod = 2000;
 
 /* these 6 variables are calculated from the initial window size ( 520 x 700 ) Their values are dependent to window size. So, with using this initial values,
    in the resize callback function, some dividers are calculated. Using these dividers with new window size gives us these variables' new values to make
@@ -144,7 +145,23 @@ void myKeyboardSpecial(int key, int x, int y);
 void myMouse(int btn, int state, int x, int y);
 void myDisplay(void);
 
-int main()
+int main(int argc, char** argv)
 {
-    std::cout << "Hello World!\n";
+	glutInit(&argc, argv);
+	glutInitDisplayMode(GLUT_SINGLE | GLUT_RGB);
+	glutInitWindowSize(width, height);
+	glutCreateWindow("Cross Road");
+	myinit();
+	glutReshapeFunc(myReshape);
+	glutMouseFunc(myMouse);
+	glutDisplayFunc(myDisplay);
+	glutKeyboardFunc(myKeyboard);
+	glutSpecialFunc(myKeyboardSpecial);
+	glutTimerFunc(randomVehicleGeneratorPeriod, randomVehicleGenerator, 0);
+	glutTimerFunc(updateVehiclePeriod, updateVehicleLocation, 0);
+	glutTimerFunc(randomCoinGeneratorPeriod, randomCoinGenerator, 0);
+
+	srand(time(NULL));
+
+	glutMainLoop();
 }
