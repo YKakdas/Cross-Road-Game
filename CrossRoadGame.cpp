@@ -152,6 +152,226 @@ void drawAgent();
 void drawCoins();
 void drawScoreBoard();
 
+void fillSideWalksVector() {
+	for (GLint i = 0; i < NUMBER_OF_SIDEWALKS; i++) {
+
+		/* setting side walk color to black */
+		Color color = { 0,0,0 };
+
+		/* define the starting point of side walk */
+		Point2D start;
+		start.x = 0;
+		start.y = (i * (SIDEWALK_WIDTH + ROAD_WIDTH));
+
+		/* define the ending point of side walk */
+		Point2D end;
+		end.x = width;
+		end.y = (i * (SIDEWALK_WIDTH + ROAD_WIDTH)) + SIDEWALK_WIDTH;
+
+		/* putting values into side walk struct and adding them to sidewalk vector which holds all sidewalks */
+		SideWalk sideWalk;
+		sideWalk.color = color;
+		sideWalk.start = start;
+		sideWalk.end = end;
+
+		sideWalks.push_back(sideWalk);
+	}
+}
+
+void fillLanesVector() {
+	GLint lineNumber = 0;
+	for (GLint i = 0; i < NUMBER_OF_ROADS; i++) { // traverse each road
+		for (GLint j = 0; j < NUMBER_OF_LINES_PER_ROAD; j++) {  // traverse each line for each road
+			for (GLint k = 0; k < NUMBER_OF_LANES_PER_LINE; k++) {  // inside the lines of roads, define the lanes for them
+
+				/* setting lane color to black */
+				Color color = { 0,0,0 };
+
+				/* define the starting point of lane line */
+				Point2D start;
+				start.x = k * (LANE_LENGTH + GAP_BETWEEN_LANES_HORIZONTALLY) + GAP_FROM_WINDOW;
+				start.y = (ROAD_WIDTH * i) + (SIDEWALK_WIDTH * (i + 1)) + (GAP_BETWEEN_LANES_VERTICALLY * (j));
+
+				/* define the ending point of lane line */
+				Point2D end;
+				end.x = start.x + LANE_LENGTH;
+				end.y = (ROAD_WIDTH * i) + (SIDEWALK_WIDTH * (i + 1)) + (GAP_BETWEEN_LANES_VERTICALLY * (j));
+
+				/* putting values into lane struct and adding them to lane vector which holds all lanes */
+				Lane lane;
+				lane.lineNumber = lineNumber;
+				lane.color = color;
+				lane.start = start;
+				lane.end = end;
+
+				/* for even lines, make vehicles go from left to right, for odds from right to left*/
+				if (((i + j) % 2) == 0) {
+					lane.direction = 'R';
+				}
+				else {
+					lane.direction = 'L';
+				}
+
+				lanes.push_back(lane);
+			}
+			lineNumber++;
+		}
+	}
+}
+
+void agentInit() {
+	SideWalk agentSideWalk = sideWalks[NUMBER_OF_SIDEWALKS / 2];
+	GLint agentLeftX = ((agentSideWalk.start.x) + (agentSideWalk.end.x)) / 2 - 5;
+	GLint agentRightX = agentLeftX + 10;
+	GLint agentUpX = agentLeftX + 5;
+	GLint agentLeftAndRightY = agentSideWalk.start.y;
+	GLint agentUpY = agentLeftAndRightY + GAP_BETWEEN_LANES_VERTICALLY;
+
+	Point2D leftVertex = { agentLeftX ,agentLeftAndRightY };
+	Point2D rightVertex = { agentRightX ,agentLeftAndRightY };
+	Point2D upVertex = { agentUpX ,agentUpY };
+
+	Color color = { 255,0,0 };
+
+	agent.leftVertex = leftVertex;
+	agent.rightVertex = rightVertex;
+	agent.upVertex = upVertex;
+	agent.direction = 'U';
+	agent.color = color;
+}
+void randomVehicleGenerator(int id) {
+
+	if (isPaused) {
+		return;
+	}
+	int carType = rand() % 2;
+	int direction = rand() % 2;
+	int lineNumber = rand() % TOTAL_NUMBER_OF_LINES;
+	int x;
+	int y = getHeightOfGivenLineNumber(lineNumber) + 2; // y coordiante of bottom of vehicle i.e. corresponding line's y value
+
+	int r = rand() % 200;
+	int g = (rand() % 200) + 56;
+	int b = (rand() % 200) + 56;
+
+	Color color = { r, g, b };
+	int velocity = 6;
+
+	if (isThereAnyCarOrTruckInThatLine(y, lineNumber)) {
+		glutTimerFunc(randomVehicleGeneratorPeriod, randomVehicleGenerator, 0);
+		return;
+	}
+
+	if (getCarsFromGivenLineNumber(lineNumber).size() != 0 || getTrucksFromGivenLineNumber(lineNumber).size() != 0) {
+		velocity = 3;
+	}
+	if (carType == 0) { // generate car
+
+		Car car;
+		if (direction == 0) {
+			x = 0;
+		}
+		else {
+			x = width - CAR_HALF_SIZE * 2;
+		}
+
+		Point2D start = { x,y };
+		Point2D end = { x + CAR_HALF_SIZE * 2 ,y + CAR_HALF_SIZE * 2 };
+
+		car.start = start;
+		car.end = end;
+		car.color = color;
+		car.velocity = velocity;
+		car.lineNumber = lineNumber;
+
+		carVector.push_back(car);
+	}
+	else { // generate truck
+
+		Truck truck;
+
+		if (direction == 0) {
+			x = 0;
+		}
+		else {
+			x = width - CAR_HALF_SIZE * 2;
+		}
+		Point2D start = { x,y };
+		Point2D end = { x + TRUCK_HALF_SIZE * 4 ,y + TRUCK_HALF_SIZE * 2 };
+
+		truck.start = start;
+		truck.end = end;
+		truck.color = color;
+		truck.velocity = velocity;
+		truck.lineNumber = lineNumber;
+
+		truckVector.push_back(truck);
+	}
+	glutTimerFunc(randomVehicleGeneratorPeriod, randomVehicleGenerator, 0);
+	glutPostRedisplay();
+}
+
+void randomCoinGenerator(int id) {
+
+	if (coinVector.size() > 5) {
+		coinVector.erase(coinVector.begin());
+	}
+	Coin coin;
+	Color color = { 204,204,0 };
+	Point2D center;
+	coin.radius = 5;
+	center.x = (rand() % (width - coin.radius * 4 + 1)) + coin.radius * 2;
+	center.y = (rand() % (gameWindowHeight - SIDEWALK_WIDTH - coin.radius * 6 + 1)) + SIDEWALK_WIDTH + coin.radius * 2;
+
+	coin.center = center;
+	coin.color = color;
+	coinVector.push_back(coin);
+	glutTimerFunc(2000, randomCoinGenerator, 0);
+}
+void updateVehicleLocation(int id) {
+
+	if (isPaused) {
+		return;
+	}
+	for (int i = 0; i < carVector.size(); i++) {
+		char direction = getDirectionOfLine(carVector[i].lineNumber);
+		if (direction == 'L') {
+			carVector[i].start.x = carVector[i].start.x - carVector[i].velocity;
+			carVector[i].end.x = carVector[i].end.x - carVector[i].velocity;
+			if (carVector[i].start.x < -10) {
+				carVector.erase(carVector.begin() + i);
+			}
+		}
+		else if (direction == 'R') {
+			carVector[i].start.x = carVector[i].start.x + carVector[i].velocity;
+			carVector[i].end.x = carVector[i].end.x + carVector[i].velocity;
+			if (carVector[i].start.x > width + 10) {
+				carVector.erase(carVector.begin() + i);
+			}
+		}
+	}
+
+	for (int i = 0; i < truckVector.size(); i++) {
+		char direction = getDirectionOfLine(truckVector[i].lineNumber);
+		if (direction == 'L') {
+			truckVector[i].start.x = truckVector[i].start.x - truckVector[i].velocity;
+			truckVector[i].end.x = truckVector[i].end.x - truckVector[i].velocity;
+			if (truckVector[i].start.x < -10) {
+				truckVector.erase(truckVector.begin() + i);
+			}
+		}
+		else if (direction == 'R') {
+			truckVector[i].start.x = truckVector[i].start.x + truckVector[i].velocity;
+			truckVector[i].end.x = truckVector[i].end.x + truckVector[i].velocity;
+			if (truckVector[i].start.x > width + 10) {
+				truckVector.erase(truckVector.begin() + i);
+			}
+		}
+	}
+	glutTimerFunc(updateVehiclePeriod, updateVehicleLocation, 0);
+	glutPostRedisplay();
+}
+
 
 void myReshape(GLsizei w, GLsizei h) {
 
