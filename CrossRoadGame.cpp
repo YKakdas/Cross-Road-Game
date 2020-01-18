@@ -152,6 +152,48 @@ void drawAgent();
 void drawCoins();
 void drawScoreBoard();
 
+void myKeyboard(unsigned char key, int x, int y) {
+	if ((key == 'Q') || (key == 'q'))
+		exit(0);
+}
+
+void myKeyboardSpecial(int key, int x, int y) {
+	if (key == GLUT_KEY_UP) {
+		agentMoveUp();
+	}
+	else if (key == GLUT_KEY_LEFT) {
+		agentMoveLeft();
+	}
+	else if (key == GLUT_KEY_RIGHT) {
+		agentMoveRight();
+	}
+	else if (key == GLUT_KEY_DOWN) {
+		agentMoveDown();
+	}
+}
+
+void myMouse(int btn, int state, int x, int y) {
+	if (btn == GLUT_RIGHT_BUTTON && state == GLUT_DOWN) {
+		if (!isPaused) {
+			isPaused = !isPaused;
+		}
+		else {
+			isPaused = false;
+			updateVehicleLocation(0);
+			randomVehicleGenerator(0);
+			isPaused = true;
+		}
+	}
+	if (btn == GLUT_LEFT_BUTTON && state == GLUT_DOWN) {
+		//	PlaySound(TEXT("coin.wav"), NULL, SND_ASYNC);
+		if (isPaused) {
+			glutTimerFunc(updateVehiclePeriod, updateVehicleLocation, 0);
+			glutTimerFunc(randomVehicleGeneratorPeriod, randomVehicleGenerator, 0);
+		}
+		isPaused = !isPaused;
+	}
+}
+
 void drawScoreBoard() {
 	glColor3ub(125, 125, 125);
 	glRecti(0, gameWindowHeight, width, height);
