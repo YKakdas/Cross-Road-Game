@@ -152,6 +152,70 @@ void drawAgent();
 void drawCoins();
 void drawScoreBoard();
 
+
+void myReshape(GLsizei w, GLsizei h) {
+
+	/* adjust clipping box */
+
+	glMatrixMode(GL_PROJECTION);
+	glLoadIdentity();
+	gluOrtho2D(0.0, (GLdouble)w, 0.0, (GLdouble)h);
+	glMatrixMode(GL_MODELVIEW);
+	glLoadIdentity();
+
+	/* adjust viewport and clear */
+
+	glViewport(0, 0, w, h);
+
+	/* set global size for use by drawing routine */
+
+	width = w;
+	height = h;
+
+	/* these dividers are derivated from the initial values of window */
+
+	SCOREBOARD_SIZE = ceil((GLdouble)height / (GLdouble)11);
+	gameWindowHeight = height - SCOREBOARD_SIZE;
+
+	SIDEWALK_WIDTH = ceil(((GLdouble)gameWindowHeight / (GLdouble)16));
+	ROAD_WIDTH = ceil((GLdouble)gameWindowHeight / (GLdouble)8);
+	LANE_LENGTH = ceil((GLdouble)width / (GLdouble)26);
+
+	GAP_BETWEEN_LANES_HORIZONTALLY = ceil((GLdouble)width / (GLdouble)34);
+	GAP_BETWEEN_LANES_VERTICALLY = ceil((GLdouble)gameWindowHeight / (GLdouble)32);
+
+	sideWalks.clear();
+	fillSideWalksVector();
+	lanes.clear();
+	fillLanesVector();
+
+	/* Previous Cars and Trucks are cleared otherwise when screen size
+	   changes, shape and coordinates of vehicles would change and this is not desired case
+	   So, all components will be drawn again when resize is happened and vehicles will be created
+	   from scratch */
+
+	carVector.clear();
+	truckVector.clear();
+	agentInit();
+}
+
+void myinit(void) {
+	fillSideWalksVector();
+	fillLanesVector();
+	agentInit();
+
+	/* setting view port that fills whole screen */
+	glViewport(0, 0, width, height);
+
+	glMatrixMode(GL_PROJECTION);
+	glLoadIdentity();
+	gluOrtho2D(0.0, (GLdouble)width, 0.0, (GLdouble)height);
+
+	/* set clear color to white and clear window */
+
+	glClearColor(0.5, 0.5, 0.5, 1.0);
+}
+
 void myKeyboard(unsigned char key, int x, int y) {
 	if ((key == 'Q') || (key == 'q'))
 		exit(0);
