@@ -7,6 +7,7 @@
 #include <iostream>
 #include <math.h>
 
+
 using namespace std;
 
 /* globals */
@@ -38,6 +39,9 @@ GLint GAP_BETWEEN_LANES_VERTICALLY = 20;
 
 GLint SCOREBOARD_SIZE = ceil((GLdouble)height / (GLdouble)11);
 GLint gameWindowHeight = height - SCOREBOARD_SIZE;
+
+GLint AGENT_WIDTH = 10;
+GLint AGENT_HEIGHT = 20;
 
 /* constants for drawing components' size*/
 
@@ -110,6 +114,13 @@ typedef struct {
 	Color color;
 } Coin;
 
+typedef struct {  // for collision detection
+	GLint x;
+	GLint y;
+	GLint width;
+	GLint height;
+} Rect;
+
 vector<SideWalk> sideWalks;
 vector<Lane> lanes;
 vector<Car> carVector;
@@ -151,6 +162,8 @@ void drawTrucks();
 void drawAgent();
 void drawCoins();
 void drawScoreBoard();
+void checkCollisions();
+int getLineNumberOfAgent();
 
 vector<Car> getCarsFromGivenLineNumber(int lineNumber) {
 	vector<Car> carsInGivenLine;
@@ -438,10 +451,75 @@ void updateVehicleLocation(int id) {
 			}
 		}
 	}
+
+	checkCollisions();
 	glutTimerFunc(updateVehiclePeriod, updateVehicleLocation, 0);
 	glutPostRedisplay();
 }
 
+int getLineNumberOfAgent() {
+	int lineNumber = -1; // indicates that agent is in SideWalk
+
+	GLint coordinateY;
+
+	if (agent.direction == 'U') {
+		coordinateY = agent.leftVertex.y;
+	}
+	else {
+		coordinateY = agent.upVertex.y;
+	}
+
+	for (int i = 0; i < lanes.size(); i = i + NUMBER_OF_LANES_PER_LINE) {
+		if (lanes[i].start.y == coordinateY) {
+			lineNumber = lanes[i].lineNumber;
+			break;
+		}
+	}
+	return lineNumber;
+}
+void checkCollisions() {
+	GLint lineNumber = getLineNumberOfAgent();
+
+	if (lineNumber != -1) {
+		vector<Car> carsInThatLine = getCarsFromGivenLineNumber(lineNumber);
+		vector<Truck> trucksInThatLine = getTrucksFromGivenLineNumber(lineNumber);
+
+		Rect agentRect;
+
+		if (agent.direction == 'U') {
+			agentRect = { agent.leftVertex.x,agent.leftVertex.y,AGENT_WIDTH,AGENT_HEIGHT };
+		}
+		else {
+			agentRect = { agent.upVertex.x - AGENT_WIDTH / 2,agent.upVertex.y,AGENT_WIDTH,AGENT_HEIGHT };
+		}
+
+		for (int i = 0; i < carsInThatLine.size(); i++) {
+			Car car = carsInThatLine[i];
+			Rect carRect = { car.start.x,car.start.y,CAR_HALF_SIZE * 2,CAR_HALF_SIZE * 2 };
+
+			if (carRect.x < agentRect.x + agentRect.width &&
+				carRect.x + carRect.width > agentRect.x &&
+				carRect.y < agentRect.y + agentRect.height &&
+				carRect.y + carRect.height > agentRect.y) {
+				gameOver();
+				break;
+			}
+		}
+
+		for (int i = 0; i < trucksInThatLine.size(); i++) {
+			Truck truck = trucksInThatLine[i];
+			Rect truckRect = { truck.start.x,truck.start.y,TRUCK_HALF_SIZE * 4,TRUCK_HALF_SIZE * 2 };
+
+			if (truckRect.x < agentRect.x + agentRect.width &&
+				truckRect.x + truckRect.width > agentRect.x &&
+				truckRect.y < agentRect.y + agentRect.height &&
+				truckRect.y + truckRect.height > agentRect.y) {
+				gameOver();
+				break;
+			}
+		}
+	}
+}
 void turnAgentDown() {
 
 	agent.leftVertex.y = agent.upVertex.y;
@@ -522,7 +600,7 @@ void agentMoveRight() {
 
 void gameOver() {
 	isGameOver = true;
-	exit(0);
+	cout << "Game Over \n";
 }
 
 void myReshape(GLsizei w, GLsizei h) {
