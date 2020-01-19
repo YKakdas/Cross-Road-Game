@@ -23,6 +23,7 @@ int time = 0;
 GLboolean isPaused = false;
 GLboolean isGameOver = false;
 
+
 GLint randomVehicleGeneratorPeriod = 500;
 GLint updateVehiclePeriod = 500;
 GLint randomCoinGeneratorPeriod = 2000;
@@ -168,6 +169,7 @@ void checkCollisions();
 int getLineNumberOfAgent();
 void drawGameOver();
 void timeCounter(int id);
+void drawWonTheGame();
 
 
 void timeCounter(int id) {
@@ -177,6 +179,11 @@ void timeCounter(int id) {
 	if (!isPaused || !isGameOver) {
 		time++;
 		glutTimerFunc(1000, timeCounter, 0);
+	}
+	if (time == 3599) {
+		isGameOver = true;
+		isPaused = true;
+		glutPostRedisplay();
 	}
 }
 
@@ -470,7 +477,6 @@ void updateVehicleLocation(int id) {
 			}
 		}
 	}
-
 	checkCollisions();
 	glutTimerFunc(updateVehiclePeriod, updateVehicleLocation, 0);
 	glutPostRedisplay();
@@ -591,6 +597,7 @@ void agentMoveUp() {
 	}
 
 	score++;
+	checkCollisions();
 	glutPostRedisplay();
 }
 
@@ -611,6 +618,7 @@ void agentMoveDown() {
 		turnAgentUp();
 	}
 	score++;
+	checkCollisions();
 	glutPostRedisplay();
 }
 void agentMoveLeft() {
@@ -621,6 +629,7 @@ void agentMoveLeft() {
 		agent.leftVertex.x = agent.leftVertex.x - 5;
 		agent.rightVertex.x = agent.rightVertex.x - 5;
 		agent.upVertex.x = agent.upVertex.x - 5;
+		checkCollisions();
 		glutPostRedisplay();
 	}
 }
@@ -633,6 +642,7 @@ void agentMoveRight() {
 		agent.leftVertex.x = agent.leftVertex.x + 5;
 		agent.rightVertex.x = agent.rightVertex.x + 5;
 		agent.upVertex.x = agent.upVertex.x + 5;
+		checkCollisions();
 		glutPostRedisplay();
 	}
 }
@@ -901,6 +911,72 @@ void drawGameOver() {
 	glEnd();
 }
 
+void drawWonTheGame() {
+	glColor3ub(0, 0, 0);
+	GLint x = width / 10;
+	GLint y = height / 3;
+	GLint widthGameOver = 9 * width / 10;
+	GLint heightGameOver = 2 * height / 3;
+	glRecti(x, y, widthGameOver, heightGameOver);
+	glColor3ub(255, 0, 0);
+	string gameOver = "YOU WON THE GAME";
+	string scoreStr = "YOUR SCORE IS : " + to_string(score);
+
+	glRasterPos2i((x + widthGameOver) / 3, (y + heightGameOver) * 3 / 5);
+	for (int i = 0; i < gameOver.size(); i++) {
+		glutBitmapCharacter(GLUT_BITMAP_TIMES_ROMAN_24, gameOver[i]);
+	}
+
+	int minute = time / 60;
+	string timeStr = "PLAYING TIME : " + to_string(minute / 10) + to_string((minute % 10)) + ":" + to_string((time / 10) % 6) + to_string((time % 10));
+	glRasterPos2i((x + 10), (y + heightGameOver) * 6 / 11);
+	for (int i = 0; i < timeStr.size(); i++) {
+		glutBitmapCharacter(GLUT_BITMAP_TIMES_ROMAN_24, timeStr[i]);
+	}
+
+	glRasterPos2i((x + 10), (y + heightGameOver) * 1 / 2);
+	for (int i = 0; i < scoreStr.size(); i++) {
+		glutBitmapCharacter(GLUT_BITMAP_TIMES_ROMAN_24, scoreStr[i]);
+	}
+
+	string exit = "Press q for exit the game";
+	glRasterPos2i((x + 10), (y + heightGameOver) * 2 / 5);
+	for (int i = 0; i < exit.size(); i++) {
+		glutBitmapCharacter(GLUT_BITMAP_HELVETICA_18, exit[i]);
+	}
+
+	glRasterPos2i((x + widthGameOver) * 2 / 3, (y + heightGameOver) * 3 / 5);
+	glBegin(GL_LINE_LOOP);
+	for (int j = 0; j < 30; j++)
+	{
+		float angle = 2 * PI * j / 30;
+		glVertex2f((x + widthGameOver) * 2 / 3 + cos(angle) * 40, (y + heightGameOver) * 2 / 5 + sin(angle) * 40 + 10);
+	}
+	glEnd();
+
+	glBegin(GL_LINES);
+	glVertex2i((x + widthGameOver) * 2 / 3 - 26, (y + heightGameOver) * 42 / 100 + 10);
+	glVertex2i((x + widthGameOver) * 2 / 3 - 6, (y + heightGameOver) * 42 / 100 + 10);
+	glVertex2i((x + widthGameOver) * 2 / 3 + 4, (y + heightGameOver) * 42 / 100 + 10);
+	glVertex2i((x + widthGameOver) * 2 / 3 + 24, (y + heightGameOver) * 42 / 100 + 10);
+	glEnd();
+
+	glBegin(GL_LINES);
+	glVertex2i((x + widthGameOver) * 2 / 3 - 4, (y + heightGameOver) * 40 / 100 + 10);
+	glVertex2i((x + widthGameOver) * 2 / 3 - 1, (y + heightGameOver) * 41 / 100 + 10);
+	glVertex2i((x + widthGameOver) * 2 / 3 - 1, (y + heightGameOver) * 41 / 100 + 10);
+	glVertex2i((x + widthGameOver) * 2 / 3 + 2, (y + heightGameOver) * 40 / 100 + 10);
+	glEnd();
+
+	glBegin(GL_LINE_STRIP);
+	for (int j = 16; j < 30; j++)
+	{
+		float angle = 2 * PI * j / 30;
+		glVertex2f((x + widthGameOver) * 2 / 3 + cos(angle) * 20, (y + heightGameOver) * 39 / 100 + sin(angle) * 20 + 10);
+	}
+	glEnd();
+	PlaySound(TEXT("win"), NULL, SND_ASYNC);
+}
 void myDisplay(void) {
 	glClear(GL_COLOR_BUFFER_BIT);
 
@@ -914,6 +990,12 @@ void myDisplay(void) {
 
 	if (isGameOver) {
 		drawGameOver();
+	}
+
+	if (time == 3599 || score >= 1000) {
+		isGameOver = true;
+		isPaused = true;
+		drawWonTheGame();
 	}
 
 	glFlush();
