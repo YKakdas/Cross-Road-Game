@@ -2,13 +2,14 @@
 #include <stdlib.h>
 #include <Windows.h>
 #include <glut.h>
-#include <string.h>
+#include <string>
 #include <vector>
 #include <iostream>
 #include <math.h>
 
 
 using namespace std;
+using std::string;
 
 /* globals */
 
@@ -164,6 +165,7 @@ void drawCoins();
 void drawScoreBoard();
 void checkCollisions();
 int getLineNumberOfAgent();
+void drawGameOver();
 
 vector<Car> getCarsFromGivenLineNumber(int lineNumber) {
 	vector<Car> carsInGivenLine;
@@ -573,8 +575,9 @@ void agentMoveUp() {
 
 	if (agent.upVertex.y >= sideWalks[sideWalks.size() - 1].start.y + GAP_BETWEEN_LANES_VERTICALLY) {
 		turnAgentDown();
-		score++;
 	}
+
+	score++;
 	glutPostRedisplay();
 }
 
@@ -593,8 +596,8 @@ void agentMoveDown() {
 
 	if (agent.upVertex.y <= sideWalks[0].end.y - GAP_BETWEEN_LANES_VERTICALLY) {
 		turnAgentUp();
-		score++;
 	}
+	score++;
 	glutPostRedisplay();
 }
 void agentMoveLeft() {
@@ -624,6 +627,7 @@ void agentMoveRight() {
 void gameOver() {
 	isGameOver = true;
 	isPaused = true;
+	glutPostRedisplay();
 	cout << "Game Over \n";
 }
 
@@ -716,11 +720,13 @@ void myMouse(int btn, int state, int x, int y) {
 			isPaused = !isPaused;
 		}
 		else {
-			isPaused = false;
-			updateVehicleLocation(0);
-			randomVehicleGenerator(0);
-			randomCoinGenerator(0);
-			isPaused = true;
+			if (!isGameOver) {
+				isPaused = false;
+				updateVehicleLocation(0);
+				randomVehicleGenerator(0);
+				randomCoinGenerator(0);
+				isPaused = true;
+			}
 		}
 	}
 	if (btn == GLUT_LEFT_BUTTON && state == GLUT_DOWN) {
@@ -795,6 +801,65 @@ void drawCoins() {
 	}
 }
 
+void drawGameOver() {
+	glColor3ub(0, 0, 0);
+	GLint x = width / 10;
+	GLint y = height / 3;
+	GLint widthGameOver = 9 * width / 10;
+	GLint heightGameOver = 2 * height / 3;
+	glRecti(x, y, widthGameOver, heightGameOver);
+	glColor3ub(255, 0, 0);
+	string gameOver = "GAME OVER";
+	string scoreStr = "YOUR SCORE IS : " + to_string(score);
+
+	glRasterPos2i((x + widthGameOver) / 3, (y + heightGameOver) * 3 / 5);
+	for (int i = 0; i < gameOver.size(); i++) {
+		glutBitmapCharacter(GLUT_BITMAP_TIMES_ROMAN_24, gameOver[i]);
+	}
+
+	glRasterPos2i((x + 10), (y + heightGameOver) * 1 / 2);
+	for (int i = 0; i < scoreStr.size(); i++) {
+		glutBitmapCharacter(GLUT_BITMAP_TIMES_ROMAN_24, scoreStr[i]);
+	}
+
+	string exit = "Press q for exit the game";
+	glRasterPos2i((x + 10), (y + heightGameOver) * 2 / 5);
+	for (int i = 0; i < scoreStr.size(); i++) {
+		glutBitmapCharacter(GLUT_BITMAP_HELVETICA_18, exit[i]);
+	}
+
+	glRasterPos2i((x + widthGameOver) * 2 / 3, (y + heightGameOver) * 3 / 5);
+	glBegin(GL_LINE_LOOP);
+	for (int j = 0; j < 30; j++)
+	{
+		float angle = 2 * PI * j / 30;
+		glVertex2f((x + widthGameOver) * 2 / 3 + cos(angle) * 40, (y + heightGameOver) * 2 / 5 + sin(angle) * 40);
+	}
+	glEnd();
+
+	glBegin(GL_LINES);
+	glVertex2i((x + widthGameOver) * 2 / 3 - 26, (y + heightGameOver) * 42 / 100);
+	glVertex2i((x + widthGameOver) * 2 / 3 - 6, (y + heightGameOver) * 42 / 100);
+	glVertex2i((x + widthGameOver) * 2 / 3 + 4, (y + heightGameOver) * 42 / 100);
+	glVertex2i((x + widthGameOver) * 2 / 3 + 24, (y + heightGameOver) * 42 / 100);
+	glEnd();
+
+	glBegin(GL_LINES);
+	glVertex2i((x + widthGameOver) * 2 / 3 - 4, (y + heightGameOver) * 40 / 100);
+	glVertex2i((x + widthGameOver) * 2 / 3 - 1, (y + heightGameOver) * 41 / 100);
+	glVertex2i((x + widthGameOver) * 2 / 3 - 1, (y + heightGameOver) * 41 / 100);
+	glVertex2i((x + widthGameOver) * 2 / 3 + 2, (y + heightGameOver) * 40 / 100);
+	glEnd();
+
+	glBegin(GL_LINE_STRIP);
+	for (int j = 2; j < 14; j++)
+	{
+		float angle = 2 * PI * j / 30;
+		glVertex2f((x + widthGameOver) * 2 / 3 + cos(angle) * 20, (y + heightGameOver) * 36 / 100 + sin(angle) * 20);
+	}
+	glEnd();
+}
+
 void myDisplay(void) {
 	glClear(GL_COLOR_BUFFER_BIT);
 
@@ -805,6 +870,10 @@ void myDisplay(void) {
 	drawTrucks();
 	drawAgent();
 	drawCoins();
+
+	if (isGameOver) {
+		drawGameOver();
+	}
 
 	glFlush();
 }
