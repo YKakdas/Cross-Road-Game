@@ -396,6 +396,10 @@ void randomVehicleGenerator(int id) {
 
 void randomCoinGenerator(int id) {
 
+	if (isPaused) {
+		return;
+	}
+
 	if (coinVector.size() > 5) {
 		coinVector.erase(coinVector.begin());
 	}
@@ -480,18 +484,33 @@ int getLineNumberOfAgent() {
 void checkCollisions() {
 	GLint lineNumber = getLineNumberOfAgent();
 
+	Rect agentRect;
+
+	if (agent.direction == 'U') {
+		agentRect = { agent.leftVertex.x,agent.leftVertex.y,AGENT_WIDTH,AGENT_HEIGHT };
+	}
+	else {
+		agentRect = { agent.upVertex.x - AGENT_WIDTH / 2,agent.upVertex.y,AGENT_WIDTH,AGENT_HEIGHT };
+	}
+
+	for (int i = 0; i < coinVector.size(); i++) {
+		Coin coin = coinVector[i];
+		Rect coinRect = { coin.center.x - coin.radius,coin.center.y - coin.radius, coin.radius * 2,coin.radius * 2 };
+
+		if (coinRect.x < agentRect.x + agentRect.width &&
+			coinRect.x + coinRect.width > agentRect.x &&
+			coinRect.y < agentRect.y + agentRect.height &&
+			coinRect.y + coinRect.height > agentRect.y) {
+			PlaySound(TEXT("coin"), NULL, SND_ASYNC);
+			score += 5;
+			coinVector.erase(coinVector.begin() + i);
+			break;
+		}
+	}
+
 	if (lineNumber != -1) {
 		vector<Car> carsInThatLine = getCarsFromGivenLineNumber(lineNumber);
 		vector<Truck> trucksInThatLine = getTrucksFromGivenLineNumber(lineNumber);
-
-		Rect agentRect;
-
-		if (agent.direction == 'U') {
-			agentRect = { agent.leftVertex.x,agent.leftVertex.y,AGENT_WIDTH,AGENT_HEIGHT };
-		}
-		else {
-			agentRect = { agent.upVertex.x - AGENT_WIDTH / 2,agent.upVertex.y,AGENT_WIDTH,AGENT_HEIGHT };
-		}
 
 		for (int i = 0; i < carsInThatLine.size(); i++) {
 			Car car = carsInThatLine[i];
@@ -501,6 +520,7 @@ void checkCollisions() {
 				carRect.x + carRect.width > agentRect.x &&
 				carRect.y < agentRect.y + agentRect.height &&
 				carRect.y + carRect.height > agentRect.y) {
+				PlaySound(TEXT("car-crash"), NULL, SND_ASYNC);
 				gameOver();
 				break;
 			}
@@ -514,6 +534,7 @@ void checkCollisions() {
 				truckRect.x + truckRect.width > agentRect.x &&
 				truckRect.y < agentRect.y + agentRect.height &&
 				truckRect.y + truckRect.height > agentRect.y) {
+				PlaySound(TEXT("car-crash"), NULL, SND_ASYNC);
 				gameOver();
 				break;
 			}
@@ -544,6 +565,7 @@ void agentMoveUp() {
 	}
 	if (agent.direction == 'D') {
 		gameOver();
+		return;
 	}
 	agent.leftVertex.y = agent.leftVertex.y + GAP_BETWEEN_LANES_VERTICALLY;
 	agent.rightVertex.y = agent.leftVertex.y;
@@ -563,6 +585,7 @@ void agentMoveDown() {
 	}
 	if (agent.direction == 'U') {
 		gameOver();
+		return;
 	}
 	agent.leftVertex.y = agent.leftVertex.y - GAP_BETWEEN_LANES_VERTICALLY;
 	agent.rightVertex.y = agent.leftVertex.y;
@@ -600,6 +623,7 @@ void agentMoveRight() {
 
 void gameOver() {
 	isGameOver = true;
+	isPaused = true;
 	cout << "Game Over \n";
 }
 
@@ -695,11 +719,14 @@ void myMouse(int btn, int state, int x, int y) {
 			isPaused = false;
 			updateVehicleLocation(0);
 			randomVehicleGenerator(0);
+			randomCoinGenerator(0);
 			isPaused = true;
 		}
 	}
 	if (btn == GLUT_LEFT_BUTTON && state == GLUT_DOWN) {
-		//	PlaySound(TEXT("coin.wav"), NULL, SND_ASYNC);
+		if (isGameOver) {
+			return;
+		}
 		if (isPaused) {
 			glutTimerFunc(updateVehiclePeriod, updateVehicleLocation, 0);
 			glutTimerFunc(randomVehicleGeneratorPeriod, randomVehicleGenerator, 0);
