@@ -6,7 +6,8 @@
 #include <iostream>
 #include <math.h>
 
-
+//TODO implement winning phase(if reaches some point or reaches 1 hour)
+//TODO implement statistics of program for debugging purposes
 using namespace std;
 using std::string;
 
