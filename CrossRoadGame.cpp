@@ -317,7 +317,7 @@ void fillLanesVector() {
 }
 
 void agentInit() {
-	SideWalk agentSideWalk = sideWalks[NUMBER_OF_SIDEWALKS / 2];
+	SideWalk agentSideWalk = sideWalks[0];
 	GLint agentLeftX = ((agentSideWalk.start.x) + (agentSideWalk.end.x)) / 2 - 5;
 	GLint agentRightX = agentLeftX + 10;
 	GLint agentUpX = agentLeftX + 5;
