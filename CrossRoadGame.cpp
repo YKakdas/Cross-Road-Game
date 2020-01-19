@@ -170,6 +170,9 @@ void timeCounter(int id);
 
 
 void timeCounter(int id) {
+	if (isPaused) {
+		return;
+	}
 	if (!isPaused || !isGameOver) {
 		time++;
 		glutTimerFunc(1000, timeCounter, 0);
