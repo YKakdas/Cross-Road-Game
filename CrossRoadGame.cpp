@@ -1,4 +1,3 @@
-#include <time.h>
 #include <stdlib.h>
 #include <Windows.h>
 #include <glut.h>
@@ -18,6 +17,7 @@ GLsizei width = 520, height = 700; /* initial window size */
 const double PI = 3.141592653589793238463;
 
 int score = 0;
+int time = 0;
 
 GLboolean isPaused = false;
 GLboolean isGameOver = false;
@@ -166,6 +166,15 @@ void drawScoreBoard();
 void checkCollisions();
 int getLineNumberOfAgent();
 void drawGameOver();
+void timeCounter(int id);
+
+
+void timeCounter(int id) {
+	if (!isPaused || !isGameOver) {
+		time++;
+		glutTimerFunc(1000, timeCounter, 0);
+	}
+}
 
 vector<Car> getCarsFromGivenLineNumber(int lineNumber) {
 	vector<Car> carsInGivenLine;
@@ -725,6 +734,7 @@ void myMouse(int btn, int state, int x, int y) {
 				updateVehicleLocation(0);
 				randomVehicleGenerator(0);
 				randomCoinGenerator(0);
+				timeCounter(0);
 				isPaused = true;
 			}
 		}
@@ -736,14 +746,28 @@ void myMouse(int btn, int state, int x, int y) {
 		if (isPaused) {
 			glutTimerFunc(updateVehiclePeriod, updateVehicleLocation, 0);
 			glutTimerFunc(randomVehicleGeneratorPeriod, randomVehicleGenerator, 0);
+			glutTimerFunc(1000, timeCounter, 0);
 		}
 		isPaused = !isPaused;
 	}
 }
 
 void drawScoreBoard() {
-	glColor3ub(125, 125, 125);
+	glColor3ub(190, 190, 190);
 	glRecti(0, gameWindowHeight, width, height);
+	int minute = time / 60;
+	string timeStr = "TIME : " +to_string(minute / 10) + to_string((minute % 10)) + ":" + to_string((time / 10) % 6) + to_string((time % 10));
+	glColor3ub(51, 0, 102);
+	glRasterPos2i(10, height - 25);
+	for (int i = 0; i < timeStr.size(); i++) {
+		glutBitmapCharacter(GLUT_BITMAP_TIMES_ROMAN_24, timeStr[i]);
+	}
+
+	string scoreStr = "SCORE : " + to_string(score);
+	glRasterPos2i(10, height - 55);
+	for (int i = 0; i < scoreStr.size(); i++) {
+		glutBitmapCharacter(GLUT_BITMAP_TIMES_ROMAN_24, scoreStr[i]);
+	}
 }
 
 void drawSidewalks() {
@@ -817,6 +841,13 @@ void drawGameOver() {
 		glutBitmapCharacter(GLUT_BITMAP_TIMES_ROMAN_24, gameOver[i]);
 	}
 
+	int minute = time / 60;
+	string timeStr = "PLAYING TIME : " + to_string(minute / 10) + to_string((minute % 10)) + ":" + to_string((time / 10) % 6) + to_string((time % 10));
+	glRasterPos2i((x + 10), (y + heightGameOver) * 6 / 11);
+	for (int i = 0; i < timeStr.size(); i++) {
+		glutBitmapCharacter(GLUT_BITMAP_TIMES_ROMAN_24, timeStr[i]);
+	}
+
 	glRasterPos2i((x + 10), (y + heightGameOver) * 1 / 2);
 	for (int i = 0; i < scoreStr.size(); i++) {
 		glutBitmapCharacter(GLUT_BITMAP_TIMES_ROMAN_24, scoreStr[i]);
@@ -833,29 +864,29 @@ void drawGameOver() {
 	for (int j = 0; j < 30; j++)
 	{
 		float angle = 2 * PI * j / 30;
-		glVertex2f((x + widthGameOver) * 2 / 3 + cos(angle) * 40, (y + heightGameOver) * 2 / 5 + sin(angle) * 40);
+		glVertex2f((x + widthGameOver) * 2 / 3 + cos(angle) * 40, (y + heightGameOver) * 2 / 5 + sin(angle) * 40 + 10);
 	}
 	glEnd();
 
 	glBegin(GL_LINES);
-	glVertex2i((x + widthGameOver) * 2 / 3 - 26, (y + heightGameOver) * 42 / 100);
-	glVertex2i((x + widthGameOver) * 2 / 3 - 6, (y + heightGameOver) * 42 / 100);
-	glVertex2i((x + widthGameOver) * 2 / 3 + 4, (y + heightGameOver) * 42 / 100);
-	glVertex2i((x + widthGameOver) * 2 / 3 + 24, (y + heightGameOver) * 42 / 100);
+	glVertex2i((x + widthGameOver) * 2 / 3 - 26, (y + heightGameOver) * 42 / 100+10);
+	glVertex2i((x + widthGameOver) * 2 / 3 - 6, (y + heightGameOver) * 42 / 100 + 10);
+	glVertex2i((x + widthGameOver) * 2 / 3 + 4, (y + heightGameOver) * 42 / 100 + 10);
+	glVertex2i((x + widthGameOver) * 2 / 3 + 24, (y + heightGameOver) * 42 / 100 + 10);
 	glEnd();
 
 	glBegin(GL_LINES);
-	glVertex2i((x + widthGameOver) * 2 / 3 - 4, (y + heightGameOver) * 40 / 100);
-	glVertex2i((x + widthGameOver) * 2 / 3 - 1, (y + heightGameOver) * 41 / 100);
-	glVertex2i((x + widthGameOver) * 2 / 3 - 1, (y + heightGameOver) * 41 / 100);
-	glVertex2i((x + widthGameOver) * 2 / 3 + 2, (y + heightGameOver) * 40 / 100);
+	glVertex2i((x + widthGameOver) * 2 / 3 - 4, (y + heightGameOver) * 40 / 100 + 10);
+	glVertex2i((x + widthGameOver) * 2 / 3 - 1, (y + heightGameOver) * 41 / 100 + 10);
+	glVertex2i((x + widthGameOver) * 2 / 3 - 1, (y + heightGameOver) * 41 / 100 + 10);
+	glVertex2i((x + widthGameOver) * 2 / 3 + 2, (y + heightGameOver) * 40 / 100 + 10);
 	glEnd();
 
 	glBegin(GL_LINE_STRIP);
 	for (int j = 2; j < 14; j++)
 	{
 		float angle = 2 * PI * j / 30;
-		glVertex2f((x + widthGameOver) * 2 / 3 + cos(angle) * 20, (y + heightGameOver) * 36 / 100 + sin(angle) * 20);
+		glVertex2f((x + widthGameOver) * 2 / 3 + cos(angle) * 20, (y + heightGameOver) * 36 / 100 + sin(angle) * 20 + 10);
 	}
 	glEnd();
 }
@@ -892,8 +923,7 @@ int main(int argc, char** argv) {
 	glutTimerFunc(randomVehicleGeneratorPeriod, randomVehicleGenerator, 0);
 	glutTimerFunc(updateVehiclePeriod, updateVehicleLocation, 0);
 	glutTimerFunc(randomCoinGeneratorPeriod, randomCoinGenerator, 0);
-
-	srand(time(NULL));
+	glutTimerFunc(1000, timeCounter, 0);
 
 	glutMainLoop();
 }
