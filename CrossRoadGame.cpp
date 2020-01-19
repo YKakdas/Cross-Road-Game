@@ -659,6 +659,12 @@ void myReshape(GLsizei w, GLsizei h) {
 
 	/* set global size for use by drawing routine */
 
+	agent.leftVertex.x = agent.leftVertex.x * w / width;
+	agent.rightVertex.x = agent.leftVertex.x + 10;
+	agent.upVertex.x = agent.leftVertex.x + 5;
+	agent.leftVertex.y = agent.leftVertex.y * h / height;
+	agent.rightVertex.y = agent.leftVertex.y;
+	agent.upVertex.y = agent.leftVertex.y + GAP_BETWEEN_LANES_VERTICALLY;
 	width = w;
 	height = h;
 
@@ -686,7 +692,7 @@ void myReshape(GLsizei w, GLsizei h) {
 
 	carVector.clear();
 	truckVector.clear();
-	agentInit();
+	
 }
 
 void myinit(void) {
