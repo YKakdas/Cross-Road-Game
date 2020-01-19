@@ -824,7 +824,7 @@ void drawGameOver() {
 
 	string exit = "Press q for exit the game";
 	glRasterPos2i((x + 10), (y + heightGameOver) * 2 / 5);
-	for (int i = 0; i < scoreStr.size(); i++) {
+	for (int i = 0; i < exit.size(); i++) {
 		glutBitmapCharacter(GLUT_BITMAP_HELVETICA_18, exit[i]);
 	}
 
