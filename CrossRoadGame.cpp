@@ -22,6 +22,7 @@ int time = 0;
 
 GLboolean isPaused = false;
 GLboolean isGameOver = false;
+GLboolean isGameWon = false;
 
 
 GLint randomVehicleGeneratorPeriod = 500;
@@ -703,7 +704,7 @@ void myReshape(GLsizei w, GLsizei h) {
 
 	carVector.clear();
 	truckVector.clear();
-	
+
 }
 
 void myinit(void) {
@@ -776,7 +777,7 @@ void drawScoreBoard() {
 	glColor3ub(190, 190, 190);
 	glRecti(0, gameWindowHeight, width, height);
 	int minute = time / 60;
-	string timeStr = "TIME : " +to_string(minute / 10) + to_string((minute % 10)) + ":" + to_string((time / 10) % 6) + to_string((time % 10));
+	string timeStr = "TIME : " + to_string(minute / 10) + to_string((minute % 10)) + ":" + to_string((time / 10) % 6) + to_string((time % 10));
 	glColor3ub(51, 0, 102);
 	glRasterPos2i(10, height - 25);
 	for (int i = 0; i < timeStr.size(); i++) {
@@ -889,7 +890,7 @@ void drawGameOver() {
 	glEnd();
 
 	glBegin(GL_LINES);
-	glVertex2i((x + widthGameOver) * 2 / 3 - 26, (y + heightGameOver) * 42 / 100+10);
+	glVertex2i((x + widthGameOver) * 2 / 3 - 26, (y + heightGameOver) * 42 / 100 + 10);
 	glVertex2i((x + widthGameOver) * 2 / 3 - 6, (y + heightGameOver) * 42 / 100 + 10);
 	glVertex2i((x + widthGameOver) * 2 / 3 + 4, (y + heightGameOver) * 42 / 100 + 10);
 	glVertex2i((x + widthGameOver) * 2 / 3 + 24, (y + heightGameOver) * 42 / 100 + 10);
@@ -912,6 +913,13 @@ void drawGameOver() {
 }
 
 void drawWonTheGame() {
+
+	if (isGameWon) {
+		return;
+	}
+
+	isGameWon = true;
+
 	glColor3ub(0, 0, 0);
 	GLint x = width / 10;
 	GLint y = height / 3;
@@ -976,6 +984,7 @@ void drawWonTheGame() {
 	}
 	glEnd();
 	PlaySound(TEXT("win"), NULL, SND_ASYNC);
+
 }
 void myDisplay(void) {
 	glClear(GL_COLOR_BUFFER_BIT);
