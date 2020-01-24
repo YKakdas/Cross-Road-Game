@@ -23,6 +23,7 @@ int time = 0;
 GLboolean isPaused = false;
 GLboolean isGameOver = false;
 GLboolean isGameWon = false;
+GLboolean isOneStepMode = false;
 
 
 GLint randomVehicleGeneratorPeriod = 100;
@@ -583,7 +584,7 @@ void turnAgentUp() {
 }
 void agentMoveUp() {
 
-	if (isPaused) {
+	if (isPaused && !isOneStepMode) {
 		return;
 	}
 	if (agent.direction == 'D') {
@@ -601,11 +602,12 @@ void agentMoveUp() {
 	score++;
 	checkCollisions();
 	glutPostRedisplay();
+	isOneStepMode = false;
 }
 
 void agentMoveDown() {
 
-	if (isPaused) {
+	if (isPaused && !isOneStepMode) {
 		return;
 	}
 	if (agent.direction == 'U') {
@@ -622,9 +624,10 @@ void agentMoveDown() {
 	score++;
 	checkCollisions();
 	glutPostRedisplay();
+	isOneStepMode = false;
 }
 void agentMoveLeft() {
-	if (isPaused) {
+	if (isPaused && !isOneStepMode) {
 		return;
 	}
 	if (agent.leftVertex.x - 5 >= 0) {
@@ -634,10 +637,11 @@ void agentMoveLeft() {
 		checkCollisions();
 		glutPostRedisplay();
 	}
+	isOneStepMode = false;
 }
 
 void agentMoveRight() {
-	if (isPaused) {
+	if (isPaused && !isOneStepMode) {
 		return;
 	}
 	if (agent.rightVertex.x + 5 <= width) {
@@ -647,6 +651,7 @@ void agentMoveRight() {
 		checkCollisions();
 		glutPostRedisplay();
 	}
+	isOneStepMode = false;
 }
 
 void gameOver() {
@@ -772,6 +777,7 @@ void myMouse(int btn, int state, int x, int y) {
 		else {
 			if (!isGameOver) {
 				isPaused = false;
+				isOneStepMode = true;
 				updateVehicleLocation(0);
 				randomVehicleGenerator(0);
 				randomCoinGenerator(0);
@@ -785,6 +791,7 @@ void myMouse(int btn, int state, int x, int y) {
 			return;
 		}
 		if (isPaused) {
+			isOneStepMode = false;
 			glutTimerFunc(updateVehiclePeriod, updateVehicleLocation, 0);
 			glutTimerFunc(randomVehicleGeneratorPeriod, randomVehicleGenerator, 0);
 			glutTimerFunc(1000, timeCounter, 0);
