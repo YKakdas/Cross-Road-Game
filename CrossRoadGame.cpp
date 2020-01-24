@@ -25,8 +25,8 @@ GLboolean isGameOver = false;
 GLboolean isGameWon = false;
 
 
-GLint randomVehicleGeneratorPeriod = 500;
-GLint updateVehiclePeriod = 500;
+GLint randomVehicleGeneratorPeriod = 100;
+GLint updateVehiclePeriod = 20;
 GLint randomCoinGeneratorPeriod = 2000;
 
 /* these 6 variables are calculated from the initial window size ( 520 x 700 ) Their values are dependent to window size. So, with using this initial values,
@@ -147,6 +147,7 @@ void randomCoinGenerator(int id);
 void updateVehicleLocation(int id);
 void agentInit();
 void gameOver();
+void gameRestart();
 void turnAgentDown();
 void turnAgentUp();
 void agentMoveUp();
@@ -369,7 +370,7 @@ void randomVehicleGenerator(int id) {
 	}
 
 	if (getCarsFromGivenLineNumber(lineNumber).size() != 0 || getTrucksFromGivenLineNumber(lineNumber).size() != 0) {
-		velocity = 3;
+		velocity = 5;
 	}
 	if (carType == 0) { // generate car
 
@@ -655,6 +656,21 @@ void gameOver() {
 	cout << "Game Over \n";
 }
 
+void gameRestart() {
+	isPaused = false;
+	isGameOver = false;
+	isGameWon = false;
+	score = 0;
+	time = 0;
+	agentInit();
+	carVector.clear();
+	truckVector.clear();
+	coinVector.clear();
+	glutTimerFunc(randomVehicleGeneratorPeriod, randomVehicleGenerator, 0);
+	glutTimerFunc(updateVehiclePeriod, updateVehicleLocation, 0);
+	glutTimerFunc(randomCoinGeneratorPeriod, randomCoinGenerator, 0);
+	glutTimerFunc(1000, timeCounter, 0);
+}
 void myReshape(GLsizei w, GLsizei h) {
 
 	/* adjust clipping box */
@@ -704,7 +720,6 @@ void myReshape(GLsizei w, GLsizei h) {
 
 	carVector.clear();
 	truckVector.clear();
-
 }
 
 void myinit(void) {
@@ -727,6 +742,11 @@ void myinit(void) {
 void myKeyboard(unsigned char key, int x, int y) {
 	if ((key == 'Q') || (key == 'q'))
 		exit(0);
+	if ((key == 'R') || (key == 'r')) {
+		if (isGameOver || isGameWon)
+			gameRestart();
+	}
+		
 }
 
 void myKeyboardSpecial(int key, int x, int y) {
@@ -875,9 +895,15 @@ void drawGameOver() {
 	}
 
 	string exit = "Press q for exit the game";
-	glRasterPos2i((x + 10), (y + heightGameOver) * 2 / 5);
+	glRasterPos2i((x + 10), (y + heightGameOver) * 21 / 50);
 	for (int i = 0; i < exit.size(); i++) {
 		glutBitmapCharacter(GLUT_BITMAP_HELVETICA_18, exit[i]);
+	}
+
+	string restart = "Press r for exit the game";
+	glRasterPos2i((x + 10), (y + heightGameOver) * 19 / 50);
+	for (int i = 0; i < restart.size(); i++) {
+		glutBitmapCharacter(GLUT_BITMAP_HELVETICA_18, restart[i]);
 	}
 
 	glRasterPos2i((x + widthGameOver) * 2 / 3, (y + heightGameOver) * 3 / 5);
@@ -914,10 +940,6 @@ void drawGameOver() {
 
 void drawWonTheGame() {
 
-	if (isGameWon) {
-		return;
-	}
-
 	isGameWon = true;
 
 	glColor3ub(0, 0, 0);
@@ -927,12 +949,12 @@ void drawWonTheGame() {
 	GLint heightGameOver = 2 * height / 3;
 	glRecti(x, y, widthGameOver, heightGameOver);
 	glColor3ub(255, 0, 0);
-	string gameOver = "YOU WON THE GAME";
+	string gameWon = "YOU WON THE GAME";
 	string scoreStr = "YOUR SCORE IS : " + to_string(score);
 
-	glRasterPos2i((x + widthGameOver) / 3, (y + heightGameOver) * 3 / 5);
-	for (int i = 0; i < gameOver.size(); i++) {
-		glutBitmapCharacter(GLUT_BITMAP_TIMES_ROMAN_24, gameOver[i]);
+	glRasterPos2i((x + widthGameOver) / 4, (y + heightGameOver) * 3 / 5);
+	for (int i = 0; i < gameWon.size(); i++) {
+		glutBitmapCharacter(GLUT_BITMAP_TIMES_ROMAN_24, gameWon[i]);
 	}
 
 	int minute = time / 60;
@@ -948,9 +970,15 @@ void drawWonTheGame() {
 	}
 
 	string exit = "Press q for exit the game";
-	glRasterPos2i((x + 10), (y + heightGameOver) * 2 / 5);
+	glRasterPos2i((x + 10), (y + heightGameOver) * 21 / 50);
 	for (int i = 0; i < exit.size(); i++) {
 		glutBitmapCharacter(GLUT_BITMAP_HELVETICA_18, exit[i]);
+	}
+
+	string restart = "Press r for exit the game";
+	glRasterPos2i((x + 10), (y + heightGameOver) * 19 / 50);
+	for (int i = 0; i < restart.size(); i++) {
+		glutBitmapCharacter(GLUT_BITMAP_HELVETICA_18, restart[i]);
 	}
 
 	glRasterPos2i((x + widthGameOver) * 2 / 3, (y + heightGameOver) * 3 / 5);
@@ -997,12 +1025,11 @@ void myDisplay(void) {
 	drawAgent();
 	drawCoins();
 
-	if (isGameOver) {
+	if (isGameOver && !isGameWon) {
 		drawGameOver();
 	}
 
-	if (time == 3599 || score >= 1000) {
-		isGameOver = true;
+	if (time == 3599 || score >= 100 && !isGameOver) {
 		isPaused = true;
 		drawWonTheGame();
 	}
@@ -1013,6 +1040,7 @@ void myDisplay(void) {
 int main(int argc, char** argv) {
 	glutInit(&argc, argv);
 	glutInitDisplayMode(GLUT_SINGLE | GLUT_RGB);
+	glutInitWindowPosition(0, 0);
 	glutInitWindowSize(width, height);
 	glutCreateWindow("Cross Road");
 	myinit();
