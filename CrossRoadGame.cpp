@@ -6,7 +6,6 @@
 #include <iostream>
 #include <math.h>
 
-//TODO implement winning phase(if reaches some point or reaches 1 hour)
 //TODO implement statistics of program for debugging purposes
 using namespace std;
 using std::string;
@@ -42,7 +41,7 @@ GLint LANE_LENGTH = 20;
 GLint GAP_BETWEEN_LANES_HORIZONTALLY = 15;
 GLint GAP_BETWEEN_LANES_VERTICALLY = 20;
 
-GLint SCOREBOARD_SIZE = ceil((GLdouble)height / (GLdouble)11);
+GLint SCOREBOARD_SIZE = 64;
 GLint gameWindowHeight = height - SCOREBOARD_SIZE;
 
 GLint AGENT_WIDTH = 10;
@@ -50,8 +49,8 @@ GLint AGENT_HEIGHT = 20;
 
 /* constants for drawing components' size*/
 
-const GLint CAR_HALF_SIZE = (GAP_BETWEEN_LANES_VERTICALLY - 4) / 2;
-const GLint TRUCK_HALF_SIZE = (GAP_BETWEEN_LANES_VERTICALLY - 4) / 2;
+GLint CAR_HALF_SIZE = (GAP_BETWEEN_LANES_VERTICALLY - GAP_BETWEEN_LANES_VERTICALLY / 5) / 2;
+GLint TRUCK_HALF_SIZE = (GAP_BETWEEN_LANES_VERTICALLY - GAP_BETWEEN_LANES_VERTICALLY / 5) / 2;
 
 const GLint NUMBER_OF_SIDEWALKS = 6;
 const GLint NUMBER_OF_ROADS = 5;
@@ -183,7 +182,7 @@ void timeCounter(int id) {
 		time++;
 		glutTimerFunc(1000, timeCounter, 0);
 	}
-	if (time == 3599) {
+	if (time == 120) {
 		isGameOver = true;
 		isPaused = true;
 		glutPostRedisplay();
@@ -329,9 +328,9 @@ void fillLanesVector() {
 
 void agentInit() {
 	SideWalk agentSideWalk = sideWalks[0];
-	GLint agentLeftX = ((agentSideWalk.start.x) + (agentSideWalk.end.x)) / 2 - 5;
-	GLint agentRightX = agentLeftX + 10;
-	GLint agentUpX = agentLeftX + 5;
+	GLint agentLeftX = ((agentSideWalk.start.x) + (agentSideWalk.end.x)) / 2 - GAP_BETWEEN_LANES_VERTICALLY / 4;
+	GLint agentRightX = agentLeftX + GAP_BETWEEN_LANES_VERTICALLY / 2;
+	GLint agentUpX = agentLeftX + GAP_BETWEEN_LANES_VERTICALLY / 4;
 	GLint agentLeftAndRightY = agentSideWalk.start.y;
 	GLint agentUpY = agentLeftAndRightY + GAP_BETWEEN_LANES_VERTICALLY;
 
@@ -693,8 +692,8 @@ void myReshape(GLsizei w, GLsizei h) {
 	/* set global size for use by drawing routine */
 
 	agent.leftVertex.x = agent.leftVertex.x * w / width;
-	agent.rightVertex.x = agent.leftVertex.x + 10;
-	agent.upVertex.x = agent.leftVertex.x + 5;
+	agent.rightVertex.x = agent.leftVertex.x + GAP_BETWEEN_LANES_VERTICALLY / 2;
+	agent.upVertex.x = agent.leftVertex.x + GAP_BETWEEN_LANES_VERTICALLY / 4;
 	agent.leftVertex.y = agent.leftVertex.y * h / height;
 	agent.rightVertex.y = agent.leftVertex.y;
 	agent.upVertex.y = agent.leftVertex.y + GAP_BETWEEN_LANES_VERTICALLY;
@@ -703,7 +702,7 @@ void myReshape(GLsizei w, GLsizei h) {
 
 	/* these dividers are derivated from the initial values of window */
 
-	SCOREBOARD_SIZE = ceil((GLdouble)height / (GLdouble)11);
+	SCOREBOARD_SIZE = floor((GLdouble)height / (GLdouble)11);
 	gameWindowHeight = height - SCOREBOARD_SIZE;
 
 	SIDEWALK_WIDTH = ceil(((GLdouble)gameWindowHeight / (GLdouble)16));
@@ -712,6 +711,9 @@ void myReshape(GLsizei w, GLsizei h) {
 
 	GAP_BETWEEN_LANES_HORIZONTALLY = ceil((GLdouble)width / (GLdouble)34);
 	GAP_BETWEEN_LANES_VERTICALLY = ceil((GLdouble)gameWindowHeight / (GLdouble)32);
+
+	CAR_HALF_SIZE = ceil((GLdouble)(GAP_BETWEEN_LANES_VERTICALLY - GAP_BETWEEN_LANES_VERTICALLY / 5) / (GLdouble)2);
+	TRUCK_HALF_SIZE = ceil((GLdouble)(GAP_BETWEEN_LANES_VERTICALLY - GAP_BETWEEN_LANES_VERTICALLY / 5) / (GLdouble)2);
 
 	sideWalks.clear();
 	fillSideWalksVector();
@@ -751,7 +753,7 @@ void myKeyboard(unsigned char key, int x, int y) {
 		if (isGameOver || isGameWon)
 			gameRestart();
 	}
-		
+
 }
 
 void myKeyboardSpecial(int key, int x, int y) {
@@ -918,7 +920,8 @@ void drawGameOver() {
 	for (int j = 0; j < 30; j++)
 	{
 		float angle = 2 * PI * j / 30;
-		glVertex2f((x + widthGameOver) * 2 / 3 + cos(angle) * 40, (y + heightGameOver) * 2 / 5 + sin(angle) * 40 + 10);
+		glVertex2f((x + widthGameOver) * 2 / 3 + cos(angle) * GAP_BETWEEN_LANES_VERTICALLY * 2,
+			(y + heightGameOver) * 2 / 5 + sin(angle) * GAP_BETWEEN_LANES_VERTICALLY * 2 + GAP_BETWEEN_LANES_VERTICALLY / 2);
 	}
 	glEnd();
 
@@ -1036,7 +1039,7 @@ void myDisplay(void) {
 		drawGameOver();
 	}
 
-	if (time == 3599 || score >= 100 && !isGameOver) {
+	if (time == 120 || score >= 100 && !isGameOver) {
 		isPaused = true;
 		drawWonTheGame();
 	}
