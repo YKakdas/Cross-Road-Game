@@ -130,6 +130,7 @@ vector<Lane> lanes;
 vector<Car> carVector;
 vector<Truck> truckVector;
 vector<Coin> coinVector;
+vector<int> keyboardHistory;
 Agent agent;
 
 /* function prototypes */
@@ -583,9 +584,6 @@ void turnAgentUp() {
 }
 void agentMoveUp() {
 
-	if (isPaused && !isOneStepMode) {
-		return;
-	}
 	if (agent.direction == 'D') {
 		gameOver();
 		return;
@@ -606,9 +604,6 @@ void agentMoveUp() {
 
 void agentMoveDown() {
 
-	if (isPaused && !isOneStepMode) {
-		return;
-	}
 	if (agent.direction == 'U') {
 		gameOver();
 		return;
@@ -626,9 +621,7 @@ void agentMoveDown() {
 	isOneStepMode = false;
 }
 void agentMoveLeft() {
-	if (isPaused && !isOneStepMode) {
-		return;
-	}
+	
 	if (agent.leftVertex.x - 5 >= 0) {
 		agent.leftVertex.x = agent.leftVertex.x - 5;
 		agent.rightVertex.x = agent.rightVertex.x - 5;
@@ -640,9 +633,7 @@ void agentMoveLeft() {
 }
 
 void agentMoveRight() {
-	if (isPaused && !isOneStepMode) {
-		return;
-	}
+	
 	if (agent.rightVertex.x + 5 <= width) {
 		agent.leftVertex.x = agent.leftVertex.x + 5;
 		agent.rightVertex.x = agent.rightVertex.x + 5;
@@ -757,6 +748,10 @@ void myKeyboard(unsigned char key, int x, int y) {
 }
 
 void myKeyboardSpecial(int key, int x, int y) {
+	keyboardHistory.push_back(key);
+	if (isPaused || isOneStepMode) {
+		return;
+	}
 	if (key == GLUT_KEY_UP) {
 		agentMoveUp();
 	}
@@ -780,6 +775,22 @@ void myMouse(int btn, int state, int x, int y) {
 			if (!isGameOver) {
 				isPaused = false;
 				isOneStepMode = true;
+				if (keyboardHistory.size() != 0) {
+					int key = keyboardHistory.back();
+					if (key == GLUT_KEY_UP) {
+						agentMoveUp();
+					}
+					else if (key == GLUT_KEY_LEFT) {
+						agentMoveLeft();
+					}
+					else if (key == GLUT_KEY_RIGHT) {
+						agentMoveRight();
+					}
+					else if (key == GLUT_KEY_DOWN) {
+						agentMoveDown();
+					}
+					keyboardHistory.clear();
+				}
 				updateVehicleLocation(0);
 				randomVehicleGenerator(0);
 				randomCoinGenerator(0);
