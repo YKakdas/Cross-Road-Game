@@ -6,7 +6,6 @@
 #include <iostream>
 #include <math.h>
 
-//TODO implement statistics of program for debugging purposes
 using namespace std;
 using std::string;
 
@@ -173,6 +172,7 @@ int getLineNumberOfAgent();
 void drawGameOver();
 void timeCounter(int id);
 void drawWonTheGame();
+void gameInfo();
 
 
 void timeCounter(int id) {
@@ -621,7 +621,7 @@ void agentMoveDown() {
 	isOneStepMode = false;
 }
 void agentMoveLeft() {
-	
+
 	if (agent.leftVertex.x - 5 >= 0) {
 		agent.leftVertex.x = agent.leftVertex.x - 5;
 		agent.rightVertex.x = agent.rightVertex.x - 5;
@@ -633,7 +633,7 @@ void agentMoveLeft() {
 }
 
 void agentMoveRight() {
-	
+
 	if (agent.rightVertex.x + 5 <= width) {
 		agent.leftVertex.x = agent.leftVertex.x + 5;
 		agent.rightVertex.x = agent.rightVertex.x + 5;
@@ -798,6 +798,7 @@ void myMouse(int btn, int state, int x, int y) {
 				isPaused = true;
 			}
 		}
+		gameInfo();
 	}
 	if (btn == GLUT_LEFT_BUTTON && state == GLUT_DOWN) {
 		if (isGameOver) {
@@ -1033,7 +1034,50 @@ void drawWonTheGame() {
 	}
 	glEnd();
 	PlaySound(TEXT("win"), NULL, SND_ASYNC);
+}
 
+void gameInfo() {
+
+	cout << "<----------------------------------------------------------------------->\n";
+	cout << "Informations about Agent \n\n";
+	cout << "Direction of agent is : " << agent.direction << "\n";
+	cout << "Left vertex of agent is : (" << agent.leftVertex.x << " " << agent.leftVertex.y << ") \n";
+	cout << "Right vertex of agent is : (" << agent.rightVertex.x << " " << agent.rightVertex.y << ") \n";
+	cout << "Up vertex of agent is : (" << agent.upVertex.x << " " << agent.upVertex.y << ") \n";
+	cout << "<----------------------------------------------------------------------->\n";
+
+	cout << "Informations about Vehicles \n\n";
+
+	for (int i = 0; i < NUMBER_OF_LINES_PER_ROAD*NUMBER_OF_ROADS; i++) {
+		vector<Car> cars = getCarsFromGivenLineNumber(i);
+		vector<Truck> trucks = getTrucksFromGivenLineNumber(i);
+
+		if (cars.size() > 0) {
+			cout << "Cars in the line " << i << ":\n\n";
+			cout << "Direction of cars is : " << getDirectionOfLine(i) << "\n";
+			for (int j = 0; j < cars.size(); j++) {
+				cout << "Left bottom vertex of car is : (" << cars[j].start.x << " " << cars[j].start.y << ") \n";
+				cout << "Right top vertex of car is : (" << cars[j].end.x << " " << cars[j].end.y << ") \n";
+				cout << "Width of the car is : " << CAR_HALF_SIZE * 2 << "\n";
+				cout << "Height of the car is : " << CAR_HALF_SIZE * 2 << "\n";
+				cout << "Velocity of the car is : " << cars[j].velocity << "\n";
+				cout << "<------------------------------------>\n";
+			}
+		}
+
+		if (trucks.size() > 0) {
+			cout << "Trucks in the line " << i << "\n\n";
+			cout << "Direction of trucks is : " << getDirectionOfLine(i) << "\n";
+			for (int j = 0; j < trucks.size(); j++) {
+				cout << "Left bottom vertex of truck is : (" << trucks[j].start.x << " " << trucks[j].start.y << ") \n";
+				cout << "Right top vertex of car is : (" << trucks[j].end.x << " " << trucks[j].end.y << ") \n";
+				cout << "Width of the truck is : " << TRUCK_HALF_SIZE * 4 << "\n";
+				cout << "Height of the truck is : " << TRUCK_HALF_SIZE * 2 << "\n";
+				cout << "Velocity of the truck is : " << trucks[j].velocity << "\n";
+				cout << "<------------------------------------>\n";
+			}
+		}
+	}
 }
 void myDisplay(void) {
 	glClear(GL_COLOR_BUFFER_BIT);
@@ -1074,6 +1118,5 @@ int main(int argc, char** argv) {
 	glutTimerFunc(updateVehiclePeriod, updateVehicleLocation, 0);
 	glutTimerFunc(randomCoinGeneratorPeriod, randomCoinGenerator, 0);
 	glutTimerFunc(1000, timeCounter, 0);
-
 	glutMainLoop();
 }
