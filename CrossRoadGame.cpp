@@ -1,181 +1,6 @@
-#include <stdlib.h>
-#include <Windows.h>
-#include <glut.h>
-#include <string>
-#include <vector>
-#include <iostream>
-#include <math.h>
+#include "CrossRoadGame.h" // includes global variables,constant variables and function prototypes
 
-using namespace std;
-using std::string;
-
-/* globals */
-
-GLsizei width = 520, height = 700; /* initial window size */
-
-const double PI = 3.141592653589793238463;
-
-int score = 0;
-int time = 0;
-
-GLboolean isPaused = false;
-GLboolean isGameOver = false;
-GLboolean isGameWon = false;
-GLboolean isOneStepMode = false;
-
-
-GLint randomVehicleGeneratorPeriod = 100;
-GLint updateVehiclePeriod = 20;
-GLint randomCoinGeneratorPeriod = 1000;
-
-/* these 6 variables are calculated from the initial window size ( 520 x 700 ) Their values are dependent to window size. So, with using this initial values,
-   in the resize callback function, some dividers are calculated. Using these dividers with new window size gives us these variables' new values to make
-   nice-looking user interface.
-*/
-
-GLint SIDEWALK_WIDTH = 40;
-GLint ROAD_WIDTH = 80;
-GLint LANE_LENGTH = 20;
-
-GLint GAP_BETWEEN_LANES_HORIZONTALLY = 15;
-GLint GAP_BETWEEN_LANES_VERTICALLY = 20;
-
-GLint SCOREBOARD_SIZE = 64;
-GLint gameWindowHeight = height - SCOREBOARD_SIZE;
-
-GLint AGENT_WIDTH = 10;
-GLint AGENT_HEIGHT = 20;
-
-/* constants for drawing components' size*/
-
-GLint CAR_HALF_SIZE = (GAP_BETWEEN_LANES_VERTICALLY - GAP_BETWEEN_LANES_VERTICALLY / 5) / 2;
-GLint TRUCK_HALF_SIZE = (GAP_BETWEEN_LANES_VERTICALLY - GAP_BETWEEN_LANES_VERTICALLY / 5) / 2;
-
-const GLint NUMBER_OF_SIDEWALKS = 6;
-const GLint NUMBER_OF_ROADS = 5;
-const GLint NUMBER_OF_LINES_PER_ROAD = 4;
-const GLint TOTAL_NUMBER_OF_LINES = NUMBER_OF_ROADS * NUMBER_OF_LINES_PER_ROAD;
-const GLint NUMBER_OF_LANES_PER_LINE = 15;
-
-const GLint GAP_FROM_WINDOW = 5;
-
-/* struct definitions for holding drawing data */
-
-typedef struct {
-	GLint x;
-	GLint y;
-} Point2D;
-
-typedef struct {
-	GLint r;
-	GLint g;
-	GLint b;
-} Color;
-
-typedef struct {
-	Point2D start;
-	Point2D end;
-	Color color;
-	int velocity;
-	int lineNumber;
-} Car;
-
-typedef struct {
-	Point2D start;
-	Point2D end;
-	Color color;
-	int velocity;
-	int lineNumber;
-} Truck;
-
-
-typedef struct {
-	int lineNumber;
-	char direction;
-	Point2D start;
-	Point2D end;
-	Color color;
-} Lane;
-
-typedef struct {
-	Point2D start;
-	Point2D end;
-	Color color;
-} SideWalk;
-
-typedef struct {
-	Point2D leftVertex;
-	Point2D rightVertex;
-	Point2D upVertex;
-	char direction; // U for UP and D for DOWN
-	Color color;
-} Agent;
-
-typedef struct {
-	GLint radius;
-	Point2D center;
-	Color color;
-} Coin;
-
-typedef struct {  // for collision detection
-	GLint x;
-	GLint y;
-	GLint width;
-	GLint height;
-} Rect;
-
-vector<SideWalk> sideWalks;
-vector<Lane> lanes;
-vector<Car> carVector;
-vector<Truck> truckVector;
-vector<Coin> coinVector;
-vector<int> keyboardHistory;
-Agent agent;
-
-/* function prototypes */
-
-void fillSideWalksVector();
-void fillLanesVector();
-vector<Car> getCarsFromGivenLineNumber(int lineNumber);
-vector<Truck> getTrucksFromGivenLineNumber(int lineNumber);
-vector<Lane> getLanesFromGivenLineNumber(int lineNumber);
-int getHeightOfGivenLineNumber(int lineNumber);
-char getDirectionOfLine(int lineNumber);
-GLboolean isThereAnyCarOrTruckInThatLine(GLint y, GLint lineNumber);
-void randomVehicleGenerator(int id);
-void randomCoinGenerator(int id);
-void updateVehicleLocation(int id);
-void agentInit();
-void gameOver();
-void gameRestart();
-void turnAgentDown();
-void turnAgentUp();
-void agentMoveUp();
-void agentMoveDown();
-void agentMoveLeft();
-void agentMoveRight();
-void myReshape(GLsizei w, GLsizei h);
-void myinit(void);
-void myKeyboard(unsigned char key, int x, int y);
-void myKeyboardSpecial(int key, int x, int y);
-void myMouse(int btn, int state, int x, int y);
-void myDisplay(void);
-void drawSidewalks();
-void drawLanes();
-void drawCars();
-void drawTrucks();
-void drawAgent();
-void drawCoins();
-void drawScoreBoard();
-void checkCollisions();
-int getLineNumberOfAgent();
-void drawGameOver();
-void timeCounter(int id);
-void drawWonTheGame();
-void gameInfo();
-
-
-void timeCounter(int id) {
+void timeCounter(int id) { // for counting time
 	if (isPaused) {
 		return;
 	}
@@ -183,14 +8,14 @@ void timeCounter(int id) {
 		time++;
 		glutTimerFunc(1000, timeCounter, 0);
 	}
-	if (time == 120) {
-		isGameOver = true;
+	if (time == 120) { // If game reaches 120. seconds, player is won. Stop the game and call redisplay to show winning info panel
+		isGameWon = true;
 		isPaused = true;
 		glutPostRedisplay();
 	}
 }
 
-vector<Car> getCarsFromGivenLineNumber(int lineNumber) {
+vector<Car> getCarsFromGivenLineNumber(int lineNumber) { // To find respective cars from the given line number
 	vector<Car> carsInGivenLine;
 	for (int i = 0; i < carVector.size(); i++) {
 		if (carVector[i].lineNumber == lineNumber) {
@@ -200,7 +25,7 @@ vector<Car> getCarsFromGivenLineNumber(int lineNumber) {
 	return carsInGivenLine;
 }
 
-vector<Truck> getTrucksFromGivenLineNumber(int lineNumber) {
+vector<Truck> getTrucksFromGivenLineNumber(int lineNumber) { // To find respective trucks from the given line number
 	vector<Truck> trucksInGivenLine;
 	for (int i = 0; i < truckVector.size(); i++) {
 		if (truckVector[i].lineNumber == lineNumber) {
@@ -210,7 +35,7 @@ vector<Truck> getTrucksFromGivenLineNumber(int lineNumber) {
 	return trucksInGivenLine;
 }
 
-vector<Lane> getLanesFromGivenLineNumber(int lineNumber) {
+vector<Lane> getLanesFromGivenLineNumber(int lineNumber) { // To find respective lanes from the given line number
 	vector<Lane> lanesInGivenLine;
 	for (int i = 0; i < lanes.size(); i++) {
 		if (lanes[i].lineNumber == lineNumber) {
@@ -220,7 +45,7 @@ vector<Lane> getLanesFromGivenLineNumber(int lineNumber) {
 	return lanesInGivenLine;
 }
 
-int getHeightOfGivenLineNumber(int lineNumber) {
+int getHeightOfGivenLineNumber(int lineNumber) { // returns given line's height
 	for (int i = 0; i < lanes.size(); i++) {
 		if (lanes[i].lineNumber == lineNumber) {
 			return lanes[i].start.y;
@@ -229,7 +54,7 @@ int getHeightOfGivenLineNumber(int lineNumber) {
 	return -1;
 }
 
-char getDirectionOfLine(int lineNumber) {
+char getDirectionOfLine(int lineNumber) { // returns direction of given line ( left or right )
 	for (int i = 0; i < lanes.size(); i++) {
 		if (lanes[i].lineNumber == lineNumber) {
 			return lanes[i].direction;
@@ -238,13 +63,15 @@ char getDirectionOfLine(int lineNumber) {
 	return 'E'; // indicates error
 }
 
-GLboolean isThereAnyCarOrTruckInThatLine(GLint y, GLint lineNumber) {
+/* this method checks is there any car or truck at the start or end position of line. If I don't check this,
+two vehicle may be generated one on top of another and collision may occur. To prevent collision of car and truck, this function is implemented.*/
+GLboolean isThereAnyCarOrTruckInThatLineEdges(GLint y, GLint lineNumber) {
 	vector<Car> cars = getCarsFromGivenLineNumber(lineNumber);
 	vector<Truck> trucks = getTrucksFromGivenLineNumber(lineNumber);
 
 	for (int i = 0; i < cars.size(); i++) {
 		if (cars[i].start.y == y) {
-			if (cars[i].start.x < CAR_HALF_SIZE * 4 || cars[i].end.x > width - CAR_HALF_SIZE * 2) {
+			if (cars[i].start.x < CAR_HALF_SIZE * 4 || cars[i].end.x > width - CAR_HALF_SIZE * 2) { // checking bounds of line
 				return true;
 			}
 		}
@@ -252,7 +79,7 @@ GLboolean isThereAnyCarOrTruckInThatLine(GLint y, GLint lineNumber) {
 
 	for (int i = 0; i < trucks.size(); i++) {
 		if (trucks[i].start.y == y) {
-			if (trucks[i].start.x < TRUCK_HALF_SIZE * 6 || trucks[i].end.x > width - CAR_HALF_SIZE * 4) {
+			if (trucks[i].start.x < TRUCK_HALF_SIZE * 6 || trucks[i].end.x > width - CAR_HALF_SIZE * 4) { // checking bounds of line
 				return true;
 			}
 		}
@@ -260,7 +87,7 @@ GLboolean isThereAnyCarOrTruckInThatLine(GLint y, GLint lineNumber) {
 	return false;
 }
 
-void fillSideWalksVector() {
+void fillSideWalksVector() { // Creates sidewalks according to generic global variables, thus when resize, they will scale.
 	for (GLint i = 0; i < NUMBER_OF_SIDEWALKS; i++) {
 
 		/* setting side walk color to black */
@@ -286,7 +113,7 @@ void fillSideWalksVector() {
 	}
 }
 
-void fillLanesVector() {
+void fillLanesVector() { // Creates lanes according to generic global variables, thus when resize, they will scale.
 	GLint lineNumber = 0;
 	for (GLint i = 0; i < NUMBER_OF_ROADS; i++) { // traverse each road
 		for (GLint j = 0; j < NUMBER_OF_LINES_PER_ROAD; j++) {  // traverse each line for each road
@@ -312,7 +139,7 @@ void fillLanesVector() {
 				lane.start = start;
 				lane.end = end;
 
-				/* for even lines, make vehicles go from left to right, for odds from right to left*/
+				/* for even lines, make vehicles go from left to right, for odds from right to left( design choice ) */
 				if (((i + j) % 2) == 0) {
 					lane.direction = 'R';
 				}
@@ -327,8 +154,11 @@ void fillLanesVector() {
 	}
 }
 
-void agentInit() {
-	SideWalk agentSideWalk = sideWalks[0];
+void agentInit() { // first values of agent is assigned in this function
+
+	SideWalk agentSideWalk = sideWalks[0]; // initial position of agent is bottom sidewalk
+
+	// calculations for making proper isosceles triangle
 	GLint agentLeftX = ((agentSideWalk.start.x) + (agentSideWalk.end.x)) / 2 - GAP_BETWEEN_LANES_VERTICALLY / 4;
 	GLint agentRightX = agentLeftX + GAP_BETWEEN_LANES_VERTICALLY / 2;
 	GLint agentUpX = agentLeftX + GAP_BETWEEN_LANES_VERTICALLY / 4;
@@ -339,37 +169,40 @@ void agentInit() {
 	Point2D rightVertex = { agentRightX ,agentLeftAndRightY };
 	Point2D upVertex = { agentUpX ,agentUpY };
 
+	// set agent's color to red
 	Color color = { 255,0,0 };
 
 	agent.leftVertex = leftVertex;
 	agent.rightVertex = rightVertex;
 	agent.upVertex = upVertex;
-	agent.direction = 'U';
+	agent.direction = 'U'; // initial direction of agent is from bottom to top( UP )
 	agent.color = color;
 }
-void randomVehicleGenerator(int id) {
+void randomVehicleGenerator(int id) { // function to generate random car or trucks
 
-	if (isPaused) {
+	if (isPaused) { // if game is paused, do not generate vehicles
 		return;
 	}
-	int carType = rand() % 2;
-	int direction = rand() % 2;
-	int lineNumber = rand() % TOTAL_NUMBER_OF_LINES;
-	int x;
+	int carType = rand() % 2; // if == 0 generate car else truck
+	int direction = rand() % 2; // deciding where to generate car(start of the line or end of the lane)
+	int lineNumber = rand() % TOTAL_NUMBER_OF_LINES; // which line to be generated on
+	int x; // will be determined according to direction
 	int y = getHeightOfGivenLineNumber(lineNumber) + 2; // y coordiante of bottom of vehicle i.e. corresponding line's y value
 
+	// to generate different colors of vehicles but not tone of red to not confuse with agent
 	int r = rand() % 200;
 	int g = (rand() % 200) + 56;
 	int b = (rand() % 200) + 56;
 
 	Color color = { r, g, b };
-	int velocity = 6;
+	int velocity = 6; // Initial speed of vehicle by pixels
 
-	if (isThereAnyCarOrTruckInThatLine(y, lineNumber)) {
+	if (isThereAnyCarOrTruckInThatLineEdges(y, lineNumber)) { // if there is vehicle to be collide, do not generate, reset the timer
 		glutTimerFunc(randomVehicleGeneratorPeriod, randomVehicleGenerator, 0);
 		return;
 	}
 
+	// If there is no vehicle in that line, give velocity as 6 but if there is, give velocity slightly less(5) to prevent collision
 	if (getCarsFromGivenLineNumber(lineNumber).size() != 0 || getTrucksFromGivenLineNumber(lineNumber).size() != 0) {
 		velocity = 5;
 	}
@@ -419,13 +252,13 @@ void randomVehicleGenerator(int id) {
 	glutPostRedisplay();
 }
 
-void randomCoinGenerator(int id) {
+void randomCoinGenerator(int id) { // generates random coins
 
 	if (isPaused) {
 		return;
 	}
 
-	if (coinVector.size() > 5) {
+	if (coinVector.size() > 5) { // every 6th generation of coin, remove the oldest one
 		coinVector.erase(coinVector.begin());
 	}
 	Coin coin;
@@ -440,9 +273,9 @@ void randomCoinGenerator(int id) {
 	coinVector.push_back(coin);
 	glutTimerFunc(randomCoinGeneratorPeriod, randomCoinGenerator, 0);
 }
-void updateVehicleLocation(int id) {
+void updateVehicleLocation(int id) { // updates locations of vehicles by their velocity
 
-	if (isPaused) {
+	if (isPaused) { // If game is paused, do not update vehicle location
 		return;
 	}
 	for (int i = 0; i < carVector.size(); i++) {
@@ -450,14 +283,14 @@ void updateVehicleLocation(int id) {
 		if (direction == 'L') {
 			carVector[i].start.x = carVector[i].start.x - carVector[i].velocity;
 			carVector[i].end.x = carVector[i].end.x - carVector[i].velocity;
-			if (carVector[i].start.x < -10) {
+			if (carVector[i].start.x < -10) { // if car passes the boundry of window, remove it from game
 				carVector.erase(carVector.begin() + i);
 			}
 		}
 		else if (direction == 'R') {
 			carVector[i].start.x = carVector[i].start.x + carVector[i].velocity;
 			carVector[i].end.x = carVector[i].end.x + carVector[i].velocity;
-			if (carVector[i].start.x > width + 10) {
+			if (carVector[i].start.x > width + 10) { // if car passes the boundry of window, remove it from game
 				carVector.erase(carVector.begin() + i);
 			}
 		}
@@ -468,24 +301,24 @@ void updateVehicleLocation(int id) {
 		if (direction == 'L') {
 			truckVector[i].start.x = truckVector[i].start.x - truckVector[i].velocity;
 			truckVector[i].end.x = truckVector[i].end.x - truckVector[i].velocity;
-			if (truckVector[i].start.x < -10) {
+			if (truckVector[i].start.x < -10) {// if truck passes the boundry of window, remove it from game
 				truckVector.erase(truckVector.begin() + i);
 			}
 		}
 		else if (direction == 'R') {
 			truckVector[i].start.x = truckVector[i].start.x + truckVector[i].velocity;
 			truckVector[i].end.x = truckVector[i].end.x + truckVector[i].velocity;
-			if (truckVector[i].start.x > width + 10) {
+			if (truckVector[i].start.x > width + 10) {// if truck passes the boundry of window, remove it from game
 				truckVector.erase(truckVector.begin() + i);
 			}
 		}
 	}
-	checkCollisions();
+	checkCollisions(); // when update the location of vehicle, check if there ay collision with agent
 	glutTimerFunc(updateVehiclePeriod, updateVehicleLocation, 0);
-	glutPostRedisplay();
+	glutPostRedisplay(); // call redisplay function to update locations
 }
 
-int getLineNumberOfAgent() {
+int getLineNumberOfAgent() { // returns the agent's line number
 	int lineNumber = -1; // indicates that agent is in SideWalk
 
 	GLint coordinateY;
@@ -505,11 +338,12 @@ int getLineNumberOfAgent() {
 	}
 	return lineNumber;
 }
-void checkCollisions() {
+void checkCollisions() { // checks collisions of vehicles and coins with agent using rectangle bounding method
 	GLint lineNumber = getLineNumberOfAgent();
 
 	Rect agentRect;
 
+	// make rectangle box from agent
 	if (agent.direction == 'U') {
 		agentRect = { agent.leftVertex.x,agent.leftVertex.y,AGENT_WIDTH,AGENT_HEIGHT };
 	}
@@ -519,53 +353,53 @@ void checkCollisions() {
 
 	for (int i = 0; i < coinVector.size(); i++) {
 		Coin coin = coinVector[i];
-		Rect coinRect = { coin.center.x - coin.radius,coin.center.y - coin.radius, coin.radius * 2,coin.radius * 2 };
+		Rect coinRect = { coin.center.x - coin.radius,coin.center.y - coin.radius, coin.radius * 2,coin.radius * 2 }; // make rectangle box of coin
 
 		if (coinRect.x < agentRect.x + agentRect.width &&
 			coinRect.x + coinRect.width > agentRect.x &&
 			coinRect.y < agentRect.y + agentRect.height &&
 			coinRect.y + coinRect.height > agentRect.y) {
-			PlaySound(TEXT("coin"), NULL, SND_ASYNC);
-			score += 5;
+			PlaySound(TEXT("coin"), NULL, SND_ASYNC); // collecting coin sound
+			score += 5; // if coin and agent collides, add 5 to score and remove that coin from game
 			coinVector.erase(coinVector.begin() + i);
 			break;
 		}
 	}
 
-	if (lineNumber != -1) {
-		vector<Car> carsInThatLine = getCarsFromGivenLineNumber(lineNumber);
-		vector<Truck> trucksInThatLine = getTrucksFromGivenLineNumber(lineNumber);
+	if (lineNumber != -1) { // means that agent is not in the sidewalk thus collision may come up
+		vector<Car> carsInThatLine = getCarsFromGivenLineNumber(lineNumber); // get cars in the line where agent stands
+		vector<Truck> trucksInThatLine = getTrucksFromGivenLineNumber(lineNumber); // get trucks in the line where agent stands
 
 		for (int i = 0; i < carsInThatLine.size(); i++) {
 			Car car = carsInThatLine[i];
-			Rect carRect = { car.start.x,car.start.y,CAR_HALF_SIZE * 2,CAR_HALF_SIZE * 2 };
+			Rect carRect = { car.start.x,car.start.y,CAR_HALF_SIZE * 2,CAR_HALF_SIZE * 2 }; // rectangle box of car
 
 			if (carRect.x < agentRect.x + agentRect.width &&
 				carRect.x + carRect.width > agentRect.x &&
 				carRect.y < agentRect.y + agentRect.height &&
 				carRect.y + carRect.height > agentRect.y) {
-				PlaySound(TEXT("car-crash"), NULL, SND_ASYNC);
-				gameOver();
+				PlaySound(TEXT("car-crash"), NULL, SND_ASYNC); // crash sound
+				gameOver(); // if car and agent collides, game over
 				break;
 			}
 		}
 
 		for (int i = 0; i < trucksInThatLine.size(); i++) {
 			Truck truck = trucksInThatLine[i];
-			Rect truckRect = { truck.start.x,truck.start.y,TRUCK_HALF_SIZE * 4,TRUCK_HALF_SIZE * 2 };
+			Rect truckRect = { truck.start.x,truck.start.y,TRUCK_HALF_SIZE * 4,TRUCK_HALF_SIZE * 2 }; // rectangle box of truck
 
 			if (truckRect.x < agentRect.x + agentRect.width &&
 				truckRect.x + truckRect.width > agentRect.x &&
 				truckRect.y < agentRect.y + agentRect.height &&
 				truckRect.y + truckRect.height > agentRect.y) {
-				PlaySound(TEXT("car-crash"), NULL, SND_ASYNC);
-				gameOver();
+				PlaySound(TEXT("car-crash"), NULL, SND_ASYNC); // crash sound
+				gameOver(); // if truck and agent collides, game over
 				break;
 			}
 		}
 	}
 }
-void turnAgentDown() {
+void turnAgentDown() { // If agent reaches the top sidewalk, turn it down
 
 	agent.leftVertex.y = agent.upVertex.y;
 	agent.upVertex.y = agent.rightVertex.y;
@@ -574,7 +408,7 @@ void turnAgentDown() {
 	glutPostRedisplay();
 }
 
-void turnAgentUp() {
+void turnAgentUp() { // If agent reaches the bottom sidewalk, turn it up
 
 	agent.leftVertex.y = agent.upVertex.y;
 	agent.upVertex.y = agent.rightVertex.y;
@@ -582,9 +416,9 @@ void turnAgentUp() {
 	agent.direction = 'U';
 	glutPostRedisplay();
 }
-void agentMoveUp() {
+void agentMoveUp() { // If user presses up arrow key
 
-	if (agent.direction == 'D') {
+	if (agent.direction == 'D') { // If it's direction is down, game over, it is not allowed.
 		gameOver();
 		return;
 	}
@@ -593,18 +427,17 @@ void agentMoveUp() {
 	agent.upVertex.y = agent.upVertex.y + GAP_BETWEEN_LANES_VERTICALLY;
 
 	if (agent.upVertex.y >= sideWalks[sideWalks.size() - 1].start.y + GAP_BETWEEN_LANES_VERTICALLY) {
-		turnAgentDown();
+		turnAgentDown(); // Check if agent reaches top sidewalk
 	}
 
-	score++;
-	checkCollisions();
+	score++; // If everything is ok, then add 1 to score
+	checkCollisions(); // Agent is moved, so check the collisions
 	glutPostRedisplay();
-	isOneStepMode = false;
 }
 
-void agentMoveDown() {
+void agentMoveDown() { // If user presses down arrow key
 
-	if (agent.direction == 'U') {
+	if (agent.direction == 'U') { // If it's direction is up, game over, it is not allowed.
 		gameOver();
 		return;
 	}
@@ -613,45 +446,43 @@ void agentMoveDown() {
 	agent.upVertex.y = agent.upVertex.y - GAP_BETWEEN_LANES_VERTICALLY;
 
 	if (agent.upVertex.y <= sideWalks[0].end.y - GAP_BETWEEN_LANES_VERTICALLY) {
-		turnAgentUp();
+		turnAgentUp(); // Check if agent reaches bottom sidewalk
 	}
-	score++;
-	checkCollisions();
+	score++; // If everything is ok, then add 1 to score
+	checkCollisions(); // Agent is moved, so check the collisions
 	glutPostRedisplay();
 	isOneStepMode = false;
 }
-void agentMoveLeft() {
+void agentMoveLeft() { // If user presses left arrow key
 
-	if (agent.leftVertex.x - 5 >= 0) {
+	if (agent.leftVertex.x - 5 >= 0) { // If agent exceeds window bounds, do not move
 		agent.leftVertex.x = agent.leftVertex.x - 5;
 		agent.rightVertex.x = agent.rightVertex.x - 5;
 		agent.upVertex.x = agent.upVertex.x - 5;
-		checkCollisions();
+		checkCollisions(); // Agent is moved, so check the collisions
 		glutPostRedisplay();
 	}
-	isOneStepMode = false;
 }
 
-void agentMoveRight() {
+void agentMoveRight() { // If user presses right arrow key
 
-	if (agent.rightVertex.x + 5 <= width) {
+	if (agent.rightVertex.x + 5 <= width) { // If agent exceeds window bounds, do not move
 		agent.leftVertex.x = agent.leftVertex.x + 5;
 		agent.rightVertex.x = agent.rightVertex.x + 5;
 		agent.upVertex.x = agent.upVertex.x + 5;
-		checkCollisions();
+		checkCollisions(); // Agent is moved, so check the collisions
 		glutPostRedisplay();
 	}
 	isOneStepMode = false;
 }
 
-void gameOver() {
+void gameOver() { // If game is over, stop the game and redisplay to show game over info panel
 	isGameOver = true;
 	isPaused = true;
 	glutPostRedisplay();
-	cout << "Game Over \n";
 }
 
-void gameRestart() {
+void gameRestart() { // If key 'r' is pressed to restart, reset everything to their initial states
 	isPaused = false;
 	isGameOver = false;
 	isGameWon = false;
@@ -680,7 +511,7 @@ void myReshape(GLsizei w, GLsizei h) {
 
 	glViewport(0, 0, w, h);
 
-	/* set global size for use by drawing routine */
+	/* calculate new locations of agent for new window size */
 
 	agent.leftVertex.x = agent.leftVertex.x * w / width;
 	agent.rightVertex.x = agent.leftVertex.x + GAP_BETWEEN_LANES_VERTICALLY / 2;
@@ -691,7 +522,7 @@ void myReshape(GLsizei w, GLsizei h) {
 	width = w;
 	height = h;
 
-	/* these dividers are derivated from the initial values of window */
+	/* calculate global variables according to new size to scale drawing components to new size */
 
 	SCOREBOARD_SIZE = floor((GLdouble)height / (GLdouble)11);
 	gameWindowHeight = height - SCOREBOARD_SIZE;
@@ -712,15 +543,19 @@ void myReshape(GLsizei w, GLsizei h) {
 	fillLanesVector();
 
 	/* Previous Cars and Trucks are cleared otherwise when screen size
-	   changes, shape and coordinates of vehicles would change and this is not desired case
-	   So, all components will be drawn again when resize is happened and vehicles will be created
-	   from scratch */
+	   changes, shape and coordinates of vehicles would change and this is not desired case. If I try to keep
+	   shapes of vehicles, then collisions may occur or they may enter the sidewalks,
+	   if I try to scale them, their shape will be broken. For example
+	   car should be square but after scaling they may become rectangle which is definition of truck. So trucks may look
+	   like car and likewise cars may look like trucks. Hence, as a design choice, I prefer to clear all cars and trucks and
+	   generate them from scratch
+	   */
 
 	carVector.clear();
 	truckVector.clear();
 }
 
-void myinit(void) {
+void myinit(void) { // Filling vectors and initializing agent
 	fillSideWalksVector();
 	fillLanesVector();
 	agentInit();
@@ -738,12 +573,17 @@ void myinit(void) {
 }
 
 void myKeyboard(unsigned char key, int x, int y) {
-	if ((key == 'Q') || (key == 'q'))
+	if ((key == 'Q') || (key == 'q')) // if 'q' is pressed, quit the game
 		exit(0);
-	else if ((key == 'R') || (key == 'r')) {
+	else if ((key == 'R') || (key == 'r')) { // if game is over or game is won, if 'r' is pressed, restart the game
 		if (isGameOver || isGameWon)
 			gameRestart();
 	}
+
+	/* key 1-2-3 are used to define hardness level of the game.(2 is default one) 
+	   1 is the easiest mode, frequency of generating vehicles are less and coins dissapear lately
+	   3 is the hardest mode, frequency of generating vehicles are more than other modes and coins dissappear quickly.
+	*/
 	else if (key == '1') {
 		randomVehicleGeneratorPeriod = 200;
 		randomCoinGeneratorPeriod = 2000;
@@ -759,8 +599,8 @@ void myKeyboard(unsigned char key, int x, int y) {
 }
 
 void myKeyboardSpecial(int key, int x, int y) {
-	keyboardHistory.push_back(key);
-	if (isPaused || isOneStepMode) {
+	keyboardHistory.push_back(key); // fill keys into vector for one step mode
+	if (isPaused || isOneStepMode) { // if game is paused or in one step mode do not move agent
 		return;
 	}
 	if (key == GLUT_KEY_UP) {
@@ -779,15 +619,15 @@ void myKeyboardSpecial(int key, int x, int y) {
 
 void myMouse(int btn, int state, int x, int y) {
 	if (btn == GLUT_RIGHT_BUTTON && state == GLUT_DOWN) {
-		if (!isPaused) {
+		if (!isPaused) { // if game is not paused,first pause it
 			isPaused = !isPaused;
 		}
-		else {
-			if (!isGameOver) {
+		else { // if game is paused
+			if (!isGameOver) { // if game is not over
 				isPaused = false;
-				isOneStepMode = true;
-				if (keyboardHistory.size() != 0) {
-					int key = keyboardHistory.back();
+				isOneStepMode = true; // enable one step mode
+				if (keyboardHistory.size() != 0) { // check the keyboard history, if it is not empty
+					int key = keyboardHistory.back(); // get last pressed keyboard key
 					if (key == GLUT_KEY_UP) {
 						agentMoveUp();
 					}
@@ -800,8 +640,9 @@ void myMouse(int btn, int state, int x, int y) {
 					else if (key == GLUT_KEY_DOWN) {
 						agentMoveDown();
 					}
-					keyboardHistory.clear();
-				}
+					keyboardHistory.clear(); // after one step is completed, clear keyboard history
+				} 
+				// call each timer functions for just 1 time in one step mode
 				updateVehicleLocation(0);
 				randomVehicleGenerator(0);
 				randomCoinGenerator(0);
@@ -809,13 +650,13 @@ void myMouse(int btn, int state, int x, int y) {
 				isPaused = true;
 			}
 		}
-		gameInfo();
+		gameInfo(); // at every one step mode is applied, write game informations on console for debugging purposes
 	}
 	if (btn == GLUT_LEFT_BUTTON && state == GLUT_DOWN) {
-		if (isGameOver) {
+		if (isGameOver) { // if game is over do nothing
 			return;
 		}
-		if (isPaused) {
+		if (isPaused) { // if game is paused, reset the timers and resume the game
 			isOneStepMode = false;
 			glutTimerFunc(updateVehiclePeriod, updateVehicleLocation, 0);
 			glutTimerFunc(randomVehicleGeneratorPeriod, randomVehicleGenerator, 0);
@@ -826,7 +667,7 @@ void myMouse(int btn, int state, int x, int y) {
 	}
 }
 
-void drawScoreBoard() {
+void drawScoreBoard() { // draws scoreboard at the top of the window
 	glColor3ub(190, 190, 190);
 	glRecti(0, gameWindowHeight, width, height);
 	int minute = time / 60;
@@ -844,7 +685,7 @@ void drawScoreBoard() {
 	}
 }
 
-void drawSidewalks() {
+void drawSidewalks() { 
 	for (int i = 0; i < sideWalks.size(); i++) {
 		SideWalk sideWalk = sideWalks[i];
 		glColor3ub(sideWalk.color.r, sideWalk.color.g, sideWalk.color.b);
@@ -1094,6 +935,7 @@ void gameInfo() {
 void myDisplay(void) {
 	glClear(GL_COLOR_BUFFER_BIT);
 
+	/* draw each component by order */
 	drawScoreBoard();
 	drawSidewalks();
 	drawLanes();
@@ -1102,15 +944,14 @@ void myDisplay(void) {
 	drawAgent();
 	drawCoins();
 
-	if (isGameOver && !isGameWon) {
+	if (isGameOver && !isGameWon) { // if game is over draw game over board
 		drawGameOver();
 	}
 
-	if (time == 120 || score >= 100 && !isGameOver) {
+	if (time == 120 || score >= 100 && !isGameOver) { // if time is reached to 120 or score passes 100, draw the game won board
 		isPaused = true;
 		drawWonTheGame();
 	}
-
 	glFlush();
 }
 
