@@ -26,7 +26,7 @@ GLboolean isOneStepMode = false;
 
 GLint randomVehicleGeneratorPeriod = 100;
 GLint updateVehiclePeriod = 20;
-GLint randomCoinGeneratorPeriod = 2000;
+GLint randomCoinGeneratorPeriod = 1000;
 
 /* these 6 variables are calculated from the initial window size ( 520 x 700 ) Their values are dependent to window size. So, with using this initial values,
    in the resize callback function, some dividers are calculated. Using these dividers with new window size gives us these variables' new values to make
@@ -438,7 +438,7 @@ void randomCoinGenerator(int id) {
 	coin.center = center;
 	coin.color = color;
 	coinVector.push_back(coin);
-	glutTimerFunc(2000, randomCoinGenerator, 0);
+	glutTimerFunc(randomCoinGeneratorPeriod, randomCoinGenerator, 0);
 }
 void updateVehicleLocation(int id) {
 
@@ -740,11 +740,22 @@ void myinit(void) {
 void myKeyboard(unsigned char key, int x, int y) {
 	if ((key == 'Q') || (key == 'q'))
 		exit(0);
-	if ((key == 'R') || (key == 'r')) {
+	else if ((key == 'R') || (key == 'r')) {
 		if (isGameOver || isGameWon)
 			gameRestart();
 	}
-
+	else if (key == '1') {
+		randomVehicleGeneratorPeriod = 200;
+		randomCoinGeneratorPeriod = 2000;
+	}
+	else if (key == '2') {
+		randomVehicleGeneratorPeriod = 100;
+		randomCoinGeneratorPeriod = 1000;
+	}
+	else if (key == '3') {
+		randomVehicleGeneratorPeriod = 20;
+		randomCoinGeneratorPeriod = 500;
+	}
 }
 
 void myKeyboardSpecial(int key, int x, int y) {
@@ -808,6 +819,7 @@ void myMouse(int btn, int state, int x, int y) {
 			isOneStepMode = false;
 			glutTimerFunc(updateVehiclePeriod, updateVehicleLocation, 0);
 			glutTimerFunc(randomVehicleGeneratorPeriod, randomVehicleGenerator, 0);
+			glutTimerFunc(randomCoinGeneratorPeriod, randomCoinGenerator, 0);
 			glutTimerFunc(1000, timeCounter, 0);
 		}
 		isPaused = !isPaused;
