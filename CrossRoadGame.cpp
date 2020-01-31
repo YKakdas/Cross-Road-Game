@@ -499,60 +499,12 @@ void gameRestart() { // If key 'r' is pressed to restart, reset everything to th
 }
 void myReshape(GLsizei w, GLsizei h) {
 
-	/* adjust clipping box */
-
-	glMatrixMode(GL_PROJECTION);
-	glLoadIdentity();
-	gluOrtho2D(0.0, (GLdouble)w, 0.0, (GLdouble)h);
-	glMatrixMode(GL_MODELVIEW);
-	glLoadIdentity();
-
-	/* adjust viewport and clear */
-
-	glViewport(0, 0, w, h);
-
-	/* calculate new locations of agent for new window size */
-
-	agent.leftVertex.x = agent.leftVertex.x * w / width;
-	agent.rightVertex.x = agent.leftVertex.x + GAP_BETWEEN_LANES_VERTICALLY / 2;
-	agent.upVertex.x = agent.leftVertex.x + GAP_BETWEEN_LANES_VERTICALLY / 4;
-	agent.leftVertex.y = agent.leftVertex.y * h / height;
-	agent.rightVertex.y = agent.leftVertex.y;
-	agent.upVertex.y = agent.leftVertex.y + GAP_BETWEEN_LANES_VERTICALLY;
-	width = w;
-	height = h;
-
-	/* calculate global variables according to new size to scale drawing components to new size */
-
-	SCOREBOARD_SIZE = floor((GLdouble)height / (GLdouble)11);
-	gameWindowHeight = height - SCOREBOARD_SIZE;
-
-	SIDEWALK_WIDTH = ceil(((GLdouble)gameWindowHeight / (GLdouble)16));
-	ROAD_WIDTH = ceil((GLdouble)gameWindowHeight / (GLdouble)8);
-	LANE_LENGTH = ceil((GLdouble)width / (GLdouble)26);
-
-	GAP_BETWEEN_LANES_HORIZONTALLY = ceil((GLdouble)width / (GLdouble)34);
-	GAP_BETWEEN_LANES_VERTICALLY = ceil((GLdouble)gameWindowHeight / (GLdouble)32);
-
-	CAR_HALF_SIZE = ceil((GLdouble)(GAP_BETWEEN_LANES_VERTICALLY - GAP_BETWEEN_LANES_VERTICALLY / 5) / (GLdouble)2);
-	TRUCK_HALF_SIZE = ceil((GLdouble)(GAP_BETWEEN_LANES_VERTICALLY - GAP_BETWEEN_LANES_VERTICALLY / 5) / (GLdouble)2);
+	glViewport(0, 0, width*h/height, h);
 
 	sideWalks.clear();
 	fillSideWalksVector();
 	lanes.clear();
 	fillLanesVector();
-
-	/* Previous Cars and Trucks are cleared otherwise when screen size
-	   changes, shape and coordinates of vehicles would change and this is not desired case. If I try to keep
-	   shapes of vehicles, then collisions may occur or they may enter the sidewalks,
-	   if I try to scale them, their shape will be broken. For example
-	   car should be square but after scaling they may become rectangle which is definition of truck. So trucks may look
-	   like car and likewise cars may look like trucks. Hence, as a design choice, I prefer to clear all cars and trucks and
-	   generate them from scratch
-	   */
-
-	carVector.clear();
-	truckVector.clear();
 }
 
 void myinit(void) { // Filling vectors and initializing agent
@@ -560,15 +512,11 @@ void myinit(void) { // Filling vectors and initializing agent
 	fillLanesVector();
 	agentInit();
 
-	/* setting view port that fills whole screen */
-	glViewport(0, 0, width, height);
-
 	glMatrixMode(GL_PROJECTION);
 	glLoadIdentity();
-	gluOrtho2D(0.0, (GLdouble)width, 0.0, (GLdouble)height);
-
-	/* set clear color to white and clear window */
-
+	gluOrtho2D(0.0, width, 0.0, height);
+	glMatrixMode(GL_MODELVIEW);
+	
 	glClearColor(0.5, 0.5, 0.5, 1.0);
 }
 

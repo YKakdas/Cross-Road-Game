@@ -7,25 +7,18 @@ same directory of .sln file. Program should be run in win32 environment and need
 
 Design choices:
 
-1. 
-When screen is resized , previous Cars and Trucks are cleared otherwise when screen size changes,shape and coordinates of vehicles would change and this is not desired case. 
-If I try to keep shapes of vehicles, then collisions may occur or they may enter the sidewalks,
-if I try to scale them, their shape will be broken. For example
-cars should be square but after scaling they may become rectangle which is definition of truck. So trucks may look
-like car and likewise cars may look like trucks. Hence, as a design choice, I prefer to clear all cars and trucks and generate them from scratch.
-
-2.
+1.
 For simplicity ( when testing, to see winning info panel which appears after you won the game ), if player resist 120 seconds without crash or reaches
 200 points, player wins the game.
 
-3.
+2.
 In one step mode(when you click the right mouse), user may press as much as he/she desired. And then, when right click is pressed again,
 last pressed keyboard key will be considered and agent will move according to this key.
 
-4.
+3.
 Initially I generate vehicles every 100 miliseconds, generate coins every 1000 miliseconds and move vehicles every 20 miliseconds.
 
-5.
+4.
 When every 6th coin is generated, I dissappear the oldest one from the game.
 
 
