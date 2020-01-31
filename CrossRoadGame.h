@@ -92,31 +92,27 @@ GLboolean isOneStepMode = false;
 
 /* periods for timer functions */
 
-GLint randomVehicleGeneratorPeriod = 100; 
+GLint randomVehicleGeneratorPeriod = 100;
 GLint updateVehiclePeriod = 20;
 GLint randomCoinGeneratorPeriod = 1000;
 
-
-/* these following variables are initially set based on initial window size(520x700)
-   but they are dynamically calculating in the reshape function generically */
-
-GLint SIDEWALK_WIDTH = 40;
-GLint ROAD_WIDTH = 80;
-GLint LANE_LENGTH = 20;
-
-GLint GAP_BETWEEN_LANES_HORIZONTALLY = 15;
-GLint GAP_BETWEEN_LANES_VERTICALLY = 20;
-
-GLint SCOREBOARD_SIZE = 64;
-GLint gameWindowHeight = height - SCOREBOARD_SIZE;
-
-GLint AGENT_WIDTH = 10;
-GLint AGENT_HEIGHT = 20;
-
-GLint CAR_HALF_SIZE = (GAP_BETWEEN_LANES_VERTICALLY - GAP_BETWEEN_LANES_VERTICALLY / 5) / 2;
-GLint TRUCK_HALF_SIZE = (GAP_BETWEEN_LANES_VERTICALLY - GAP_BETWEEN_LANES_VERTICALLY / 5) / 2;
-
 /* constants for drawing components' size*/
+
+const GLint SIDEWALK_WIDTH = 40;
+const GLint ROAD_WIDTH = 80;
+const GLint LANE_LENGTH = 20;
+
+const GLint GAP_BETWEEN_LANES_HORIZONTALLY = 15;
+const GLint GAP_BETWEEN_LANES_VERTICALLY = 20;
+
+const GLint SCOREBOARD_SIZE = 64;
+const GLint gameWindowHeight = height - SCOREBOARD_SIZE;
+
+const GLint AGENT_WIDTH = 10;
+const GLint AGENT_HEIGHT = 20;
+
+const GLint CAR_HALF_SIZE = (GAP_BETWEEN_LANES_VERTICALLY - GAP_BETWEEN_LANES_VERTICALLY / 5) / 2;
+const GLint TRUCK_HALF_SIZE = (GAP_BETWEEN_LANES_VERTICALLY - GAP_BETWEEN_LANES_VERTICALLY / 5) / 2;
 
 const GLint NUMBER_OF_SIDEWALKS = 6;
 const GLint NUMBER_OF_ROADS = 5;
