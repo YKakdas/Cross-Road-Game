@@ -722,7 +722,7 @@ void drawGameOver() {
 		glutBitmapCharacter(GLUT_BITMAP_HELVETICA_18, exit[i]);
 	}
 
-	string restart = "Press r for exit the game";
+	string restart = "Press r for restart the game";
 	glRasterPos2i((x + 10), (y + heightGameOver) * 19 / 50);
 	for (int i = 0; i < restart.size(); i++) {
 		glutBitmapCharacter(GLUT_BITMAP_HELVETICA_18, restart[i]);
@@ -798,7 +798,7 @@ void drawWonTheGame() {
 		glutBitmapCharacter(GLUT_BITMAP_HELVETICA_18, exit[i]);
 	}
 
-	string restart = "Press r for exit the game";
+	string restart = "Press r for restart the game";
 	glRasterPos2i((x + 10), (y + heightGameOver) * 19 / 50);
 	for (int i = 0; i < restart.size(); i++) {
 		glutBitmapCharacter(GLUT_BITMAP_HELVETICA_18, restart[i]);
