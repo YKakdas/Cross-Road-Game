@@ -40,4 +40,6 @@ Aim of the game is moving agent collecting points without crashing to vehicles.
 - ***normal (2):*** [default] generate vehicles every 100ms and generate coins every 1000ms <br>
 - ***hard (3):*** generate vehicles every 20ms and generate coins every 500ms <br>
 
+![Demonstration of Game](demo.gif)
+
 #### Yaşar Can Kakdaş
